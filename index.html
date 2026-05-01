@@ -577,8 +577,9 @@ async function submitLearn() {
   } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
 }
 function closeModal() { 
-  document.getElementById('modal-container').innerHTML = ''; 
-  document.getElementById('reply-text').value = '';
+  document.getElementById('modal-container').innerHTML = '';
+  const replyText = document.getElementById('reply-text');
+  if (replyText) replyText.value = '';
 }
 
 /* ===== Insights ===== */
@@ -949,7 +950,8 @@ async function submitReply() {
     const md = await API.getMD('discuss', s);
     const parsed = parseFM(md);
     S.discuss.thread = parseThread(parsed.body || md);
-    document.getElementById('reply-text').value = '';
+    const replyText = document.getElementById('reply-text');
+    if (replyText) replyText.value = '';
     toast('回覆已新增！'); renderPage();
   } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發送回覆'; }
 }
