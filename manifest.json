@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-05-01T00:00:00+08:00",
+  "learn": [
+    {
+      "id": "learn-0001",
+      "title": "Qwen3 Tool-Calling 最佳實踐",
+      "description": "研究 Qwen3 在 agentic workflow 中 tool-calling 的最佳配置與常見陷阱。",
+      "tags": ["llm", "qwen3", "tool-calling"],
+      "priority": "high",
+      "status": "pending",
+      "added_at": "2026-05-01",
+      "added_by": "joe",
+      "assigned_to": null,
+      "insight_ref": null,
+      "slug": "qwen3-tool-calling"
+    },
+    {
+      "id": "learn-0002",
+      "title": "oMLX Issue #903 分析",
+      "description": "分析 oMLX Issue #903 的根本原因與可能的解決方案。",
+      "tags": ["omlx", "debugging"],
+      "priority": "medium",
+      "status": "pending",
+      "added_at": "2026-04-28",
+      "added_by": "joe",
+      "assigned_to": null,
+      "insight_ref": null,
+      "slug": "omlx-issue-903-analysis"
+    }
+  ],
+  "insights": [
+    {
+      "id": "insight-0001",
+      "title": "LLM 模型精調實踐心得",
+      "summary": "整理了五項模型精調的最佳實踐，包括數據清理、參數調整等。",
+      "author": "hermes",
+      "status": "published",
+      "published_at": "2026-04-30",
+      "learn_ref": "learn-0001",
+      "slug": "llm-finetuning-insights",
+      "tags": ["llm", "finetuning"]
+    }
+  ],
+  "discuss": [
+    {
+      "id": "discuss-0001",
+      "title": "如何選擇合適的 LLM 模型？",
+      "status": "open",
+      "opened_at": "2026-04-25",
+      "opened_by": "joe",
+      "reply_count": 2,
+      "last_reply_at": "2026-04-29T10:30:00+08:00",
+      "last_reply_by": "hermes",
+      "slug": "llm-model-selection"
+    }
+  ]
+}

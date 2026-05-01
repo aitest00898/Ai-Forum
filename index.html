@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joe's Knowledge Forum</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0d17;--bg2:#10132a;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --primary:#6366f1;--primary-light:#818cf8;--primary-glow:rgba(99,102,241,0.25);
+  --accent:#06b6d4;--accent-glow:rgba(6,182,212,0.2);
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-full:9999px;
+  --shadow:0 4px 24px rgba(0,0,0,0.3);--shadow-glow:0 0 20px var(--primary-glow);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);font-size:15px;line-height:1.6;color:var(--text);background:var(--bg)}
+a{color:var(--primary-light);text-decoration:none;transition:color var(--transition)}
+a:hover{color:var(--accent)}
+::selection{background:var(--primary);color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* Layout */
+#app{display:flex;flex-direction:column;height:100vh}
+#app-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:56px;min-height:56px;
+  background:rgba(11,13,23,0.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);position:relative;z-index:100;
+}
+#app-header::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--primary),var(--accent),transparent);
+  opacity:0.5;
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-logo{font-size:1.15rem;font-weight:700;
+  background:linear-gradient(135deg,var(--primary-light),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.header-updated{font-size:0.75rem;color:var(--text3)}
+.header-right{display:flex;align-items:center;gap:12px}
+.auth-dot{width:10px;height:10px;border-radius:50%;transition:var(--transition)}
+.auth-dot.on{background:var(--success);box-shadow:0 0 8px rgba(16,185,129,0.5)}
+.auth-dot.off{background:var(--danger);box-shadow:0 0 8px rgba(239,68,68,0.4)}
+
+#app-body{display:flex;flex:1;overflow:hidden}
+#app-sidebar{
+  width:200px;min-width:200px;padding:16px 12px;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+.nav-group{display:flex;flex-direction:column;gap:4px}
+.nav-sep{height:1px;background:var(--border);margin:12px 8px}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border:none;border-radius:var(--r-md);cursor:pointer;
+  font-size:0.875rem;font-weight:500;font-family:var(--font);
+  color:var(--text2);background:transparent;
+  transition:all var(--transition);position:relative;
+  border-left:3px solid transparent;
+}
+.nav-btn:hover{background:var(--surface2);color:var(--text);transform:none;box-shadow:none}
+.nav-btn.active{
+  background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(6,182,212,0.1));
+  color:var(--primary-light);border-left-color:var(--primary);font-weight:600;
+}
+.nav-icon{font-size:1.1rem;width:24px;text-align:center}
+
+#main-content{flex:1;overflow-y:auto;padding:28px 32px}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 18px;border:none;border-radius:var(--r-sm);
+  font-size:0.85rem;font-weight:600;font-family:var(--font);
+  cursor:pointer;transition:all var(--transition);
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-light);box-shadow:0 4px 14px var(--primary-glow);transform:translateY(-1px)}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);transform:translateY(-1px)}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.2)}
+.btn-danger:hover{background:rgba(239,68,68,0.25);transform:translateY(-1px)}
+.btn-success{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.2)}
+.btn-success:hover{background:rgba(16,185,129,0.25);transform:translateY(-1px)}
+.btn-warning{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.2)}
+.btn-warning:hover{background:rgba(245,158,11,0.25);transform:translateY(-1px)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-sm{padding:6px 12px;font-size:0.78rem}
+
+/* Cards */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:20px;
+  transition:all var(--transition);position:relative;
+}
+.card:hover{background:var(--surface2);border-color:var(--border2);box-shadow:var(--shadow)}
+.card-click{cursor:pointer}
+.card-click:hover{transform:translateY(-2px)}
+.card-title{font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:6px}
+.card-desc{font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.card-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:0.78rem;color:var(--text3)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+
+/* Tags & Badges */
+.tag{display:inline-block;padding:2px 10px;border-radius:var(--r-full);font-size:0.7rem;font-weight:500;background:rgba(99,102,241,0.12);color:var(--primary-light);margin-right:4px;margin-top:4px}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--r-full);font-size:0.72rem;font-weight:600}
+.badge-pending{background:rgba(245,158,11,0.15);color:var(--warning)}
+.badge-in_progress{background:rgba(6,182,212,0.15);color:var(--accent)}
+.badge-reviewed{background:rgba(16,185,129,0.15);color:var(--success)}
+.badge-archived{background:rgba(100,116,139,0.2);color:var(--text3)}
+.badge-published{background:rgba(16,185,129,0.15);color:var(--success)}
+.badge-draft{background:rgba(245,158,11,0.15);color:var(--warning)}
+.badge-open{background:rgba(6,182,212,0.15);color:var(--accent)}
+.badge-closed{background:rgba(100,116,139,0.2);color:var(--text3)}
+.badge-pinned{background:rgba(245,158,11,0.15);color:var(--warning)}
+.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.priority-high{background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,0.5)}
+.priority-medium{background:var(--warning);box-shadow:0 0 6px rgba(245,158,11,0.4)}
+.priority-low{background:var(--text3)}
+.author-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:var(--r-full);font-size:0.72rem;font-weight:600}
+.author-joe{background:rgba(99,102,241,0.15);color:var(--primary-light)}
+.author-hermes{background:rgba(6,182,212,0.15);color:var(--accent)}
+.author-openclaw{background:rgba(16,185,129,0.15);color:var(--success)}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{
+  padding:6px 16px;border:1px solid var(--border);border-radius:var(--r-full);
+  background:transparent;color:var(--text3);font-size:0.8rem;font-weight:500;
+  cursor:pointer;transition:all var(--transition);font-family:var(--font);
+}
+.filter-btn:hover{border-color:var(--primary);color:var(--primary-light);transform:none;box-shadow:none}
+.filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:0.82rem;font-weight:600;color:var(--text2);margin-bottom:6px}
+.form-input,.form-textarea,.form-select{
+  width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:rgba(255,255,255,0.03);color:var(--text);font-size:0.9rem;font-family:var(--font);
+  transition:all var(--transition);
+}
+.form-textarea{min-height:120px;resize:vertical}
+.form-input:focus,.form-textarea:focus,.form-select:focus{
+  outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);
+}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.form-select option{background:var(--bg2);color:var(--text)}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+  animation:fadeIn 0.2s ease;
+}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);
+  padding:28px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto;
+  box-shadow:0 24px 48px rgba(0,0,0,0.4);animation:slideUp 0.25s ease;
+}
+.modal-title{font-size:1.25rem;font-weight:700;margin-bottom:20px;color:var(--text)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* Toast */
+#toast-container{position:fixed;top:68px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{
+  padding:12px 20px;border-radius:var(--r-md);font-size:0.85rem;font-weight:500;
+  display:flex;align-items:center;gap:8px;min-width:280px;
+  animation:slideRight 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.3);
+}
+.toast-success{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
+.toast-error{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
+.toast-warning{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3)}
+.toast-hide{animation:slideOut 0.3s ease forwards}
+
+/* Content Viewer */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;color:var(--text2);
+  font-size:0.85rem;cursor:pointer;margin-bottom:20px;transition:color var(--transition);
+  background:none;border:none;font-family:var(--font);
+}
+.back-btn:hover{color:var(--primary-light)}
+.content-viewer{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;margin-bottom:20px}
+.content-title{font-size:1.6rem;font-weight:700;margin-bottom:12px;color:var(--text)}
+.content-meta{display:flex;flex-wrap:wrap;gap:16px;color:var(--text3);font-size:0.82rem;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.content-meta strong{color:var(--text2)}
+.content-actions{display:flex;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* Discussion */
+.reply-block{
+  margin-top:16px;padding:16px 20px;
+  background:rgba(255,255,255,0.02);border-left:3px solid var(--primary);
+  border-radius:0 var(--r-md) var(--r-md) 0;
+}
+.reply-header{display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.8rem}
+.reply-author{font-weight:600;color:var(--text)}
+.reply-time{color:var(--text3)}
+.reply-form{margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* Markdown Content */
+.md-body{line-height:1.8;color:var(--text2)}
+.md-body h1,.md-body h2,.md-body h3,.md-body h4{color:var(--text);margin:1.5rem 0 0.75rem;font-weight:600}
+.md-body h1{font-size:1.6rem}.md-body h2{font-size:1.35rem}.md-body h3{font-size:1.15rem}.md-body h4{font-size:1rem}
+.md-body p{margin-bottom:0.75rem}
+.md-body ul,.md-body ol{margin:0 0 0.75rem 1.5rem}
+.md-body li{margin-bottom:0.35rem}
+.md-body code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:0.88em;color:var(--accent)}
+.md-body pre{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;overflow-x:auto;margin:1rem 0}
+.md-body pre code{background:none;padding:0;color:var(--text2);font-size:0.85rem}
+.md-body blockquote{border-left:3px solid var(--primary);padding-left:16px;margin:1rem 0;color:var(--text3)}
+.md-body table{width:100%;border-collapse:collapse;margin:1rem 0}
+.md-body th,.md-body td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:0.85rem}
+.md-body th{background:var(--surface2);font-weight:600;color:var(--text)}
+.md-body a{color:var(--primary-light)}
+.md-body img{max-width:100%;border-radius:var(--r-sm)}
+.md-body hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+
+/* Page Header */
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.page-title{font-size:1.4rem;font-weight:700}
+
+/* Empty State */
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-text{font-size:0.95rem}
+
+/* Loading */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.6s linear infinite}
+.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r-sm);height:20px;margin-bottom:8px}
+
+/* Settings */
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;margin-bottom:20px}
+.settings-card h2{font-size:1.1rem;font-weight:600;margin-bottom:16px;color:var(--text)}
+.settings-hint{font-size:0.75rem;color:var(--text3);margin-top:6px}
+.settings-about p{color:var(--text2);font-size:0.9rem;margin-bottom:8px}
+.settings-about ul{margin-left:1.2rem;color:var(--text3);font-size:0.85rem}
+.settings-about li{margin-bottom:4px}
+.verify-result{margin-top:12px;padding:10px 14px;border-radius:var(--r-sm);font-size:0.85rem}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideOut{to{opacity:0;transform:translateX(40px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.fade-in{animation:fadeIn 0.3s ease}
+
+/* Responsive */
+@media(max-width:768px){
+  #app-sidebar{width:60px;min-width:60px;padding:12px 6px}
+  .nav-btn span:not(.nav-icon){display:none}
+  .nav-btn{justify-content:center;padding:10px;border-left:none;border-bottom:3px solid transparent}
+  .nav-btn.active{border-bottom-color:var(--primary);border-left-color:transparent}
+  #main-content{padding:16px}
+  .card-grid{grid-template-columns:1fr}
+  .page-header{flex-direction:column;align-items:flex-start;gap:12px}
+}
+
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <div id="modal-container"></div>
+    <div id="toast-container"></div>
+    <script>
+/* ===== State ===== */
+const S = {
+  tab: 'learn', manifest: null, token: localStorage.getItem('gh_pat'),
+  repo: JSON.parse(localStorage.getItem('repo_config') || '{"owner":"","repo":""}'),
+  learn: { filter: 'all', slug: null, data: null },
+  insights: { slug: null, data: null },
+  discuss: { slug: null, data: null, thread: null },
+};
+
+/* ===== Utilities ===== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function utf8b64(s) { return btoa(unescape(encodeURIComponent(s))); }
+function slug(t) { return t.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 50) || 'untitled'; }
+function genId(prefix, items) { const mx = Math.max(0, ...items.map(i => parseInt(i.id.split('-')[1]))); return `${prefix}-${String(mx + 1).padStart(4, '0')}`; }
+function relTime(d) { const s = Math.floor((Date.now() - new Date(d)) / 1000); if (s < 60) return '剛才'; if (s < 3600) return Math.floor(s/60) + ' 分鐘前'; if (s < 86400) return Math.floor(s/3600) + ' 小時前'; return Math.floor(s/86400) + ' 天前'; }
+
+function parseFM(content) {
+  const lines = content.split('\n');
+  if (lines[0] !== '---') return { fm: {}, body: content };
+  let end = 1;
+  for (let i = 1; i < lines.length; i++) { if (lines[i] === '---') { end = i; break; } }
+  const fm = {};
+  lines.slice(1, end).forEach(l => {
+    const m = l.match(/^([^:]+):\s*(.+)$/);
+    if (m) { let v = m[2].trim(); if (/^["'].*["']$/.test(v)) v = v.slice(1,-1); fm[m[1].trim()] = v; }
+  });
+  return { fm, body: lines.slice(end + 1).join('\n').trim() };
+}
+
+function parseThread(content) {
+  const parts = content.split(/\n---reply---\n/);
+  const main = parts[0].trim();
+  const replies = [];
+  for (let i = 1; i < parts.length; i++) {
+    const lines = parts[i].trim().split('\n');
+    let author = '', ts = '', start = 0;
+    for (let j = 0; j < lines.length; j++) {
+      const m = lines[j].match(/^(author|timestamp):\s*(.+)$/);
+      if (m) { if (m[1] === 'author') author = m[2].trim(); else ts = m[2].trim(); }
+      else if (lines[j].trim()) { start = j; break; }
+    }
+    if (author) replies.push({ author, timestamp: ts, content: lines.slice(start).join('\n').trim() });
+  }
+  return { main, replies };
+}
+
+/* ===== Toast ===== */
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `${type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠'} ${esc(msg)}`;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+/* ===== GitHub API ===== */
+const API = {
+  headers() {
+    const h = { 'Content-Type': 'application/json' };
+    if (S.token) h['Authorization'] = `Bearer ${S.token}`;
+    return h;
+  },
+  raw() { return `https://raw.githubusercontent.com/${S.repo.owner}/${S.repo.repo}/main`; },
+  base() { return `https://api.github.com/repos/${S.repo.owner}/${S.repo.repo}`; },
+
+  async getManifest() {
+    const r = await fetch(`${this.raw()}/manifest.json`);
+    if (!r.ok) throw new Error(`載入 manifest 失敗 (${r.status})`);
+    return r.json();
+  },
+  async getMD(section, s) {
+    const r = await fetch(`${this.raw()}/content/${section}/${s}.md`);
+    if (!r.ok) throw new Error(`載入文章失敗 (${r.status})`);
+    return r.text();
+  },
+  async getSHA(path) {
+    const r = await fetch(`${this.base()}/contents/${path}`, { headers: this.headers() });
+    if (!r.ok) throw new Error(`取得 SHA 失敗 (${r.status})`);
+    return (await r.json()).sha;
+  },
+  async putFile(path, content, message, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const sha = await this.getSHA(path);
+        const r = await fetch(`${this.base()}/contents/${path}`, {
+          method: 'PUT', headers: this.headers(),
+          body: JSON.stringify({ message, content: utf8b64(content), sha })
+        });
+        if (r.status === 409 && i < retries - 1) { await new Promise(r => setTimeout(r, 5000)); continue; }
+        if (!r.ok) throw new Error(`更新失敗 (${r.status})`);
+        return;
+      } catch (e) { if (i === retries - 1) throw e; }
+    }
+  },
+  async createFile(path, content, message) {
+    const r = await fetch(`${this.base()}/contents/${path}`, {
+      method: 'PUT', headers: this.headers(),
+      body: JSON.stringify({ message, content: utf8b64(content) })
+    });
+    if (!r.ok) throw new Error(`建立檔案失敗 (${r.status})`);
+  },
+  async verify() {
+    if (!S.token) return false;
+    try { const r = await fetch(`${this.base()}`, { headers: this.headers() }); return r.ok; }
+    catch { return false; }
+  }
+};
+
+/* ===== Load Manifest ===== */
+async function loadManifest() {
+  try {
+    S.manifest = await API.getManifest();
+    renderHeader();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ===== Render Shell ===== */
+function renderApp() {
+  document.getElementById('app').innerHTML = `
+    <header id="app-header"></header>
+    <div id="app-body">
+      <aside id="app-sidebar"></aside>
+      <main id="main-content"></main>
+    </div>`;
+  renderHeader(); renderSidebar(); renderPage();
+}
+
+function renderHeader() {
+  const h = document.getElementById('app-header');
+  if (!h) return;
+  const up = S.manifest ? relTime(S.manifest.updated_at) : '';
+  h.innerHTML = `
+    <div class="header-left">
+      <div class="header-logo">Joe's Knowledge Forum</div>
+      ${up ? `<span class="header-updated">更新於 ${up}</span>` : ''}
+    </div>
+    <div class="header-right">
+      <button class="btn btn-ghost btn-sm" onclick="loadManifest().then(renderPage)">↻ 刷新</button>
+      <span class="auth-dot ${S.token ? 'on' : 'off'}" title="${S.token ? '已認證' : '未認證'}"></span>
+    </div>`;
+}
+
+function renderSidebar() {
+  const items = [
+    { id:'learn', icon:'📚', label:'待學習' },
+    { id:'insights', icon:'💡', label:'心得' },
+    { id:'discuss', icon:'💬', label:'討論' },
+  ];
+  document.getElementById('app-sidebar').innerHTML = `
+    <div class="nav-group">
+      ${items.map(i => `<button class="nav-btn ${S.tab===i.id?'active':''}" onclick="switchTab('${i.id}')">
+        <span class="nav-icon">${i.icon}</span><span>${i.label}</span></button>`).join('')}
+    </div>
+    <div class="nav-sep"></div>
+    <div class="nav-group">
+      <button class="nav-btn ${S.tab==='settings'?'active':''}" onclick="switchTab('settings')">
+        <span class="nav-icon">⚙️</span><span>設定</span></button>
+    </div>`;
+}
+
+function switchTab(t) { S.tab = t; renderSidebar(); renderPage(); }
+function renderPage() {
+  const m = document.getElementById('main-content');
+  if (!m) return;
+  if (S.tab === 'learn') renderLearn(m);
+  else if (S.tab === 'insights') renderInsights(m);
+  else if (S.tab === 'discuss') renderDiscuss(m);
+  else renderSettings(m);
+}
+
+/* ===== Learn ===== */
+function renderLearn(m) {
+  if (S.learn.slug && S.learn.data) return renderLearnDetail(m);
+  const items = S.manifest ? S.manifest.learn : [];
+  let filtered = S.learn.filter === 'all' ? items : items.filter(i => i.status === S.learn.filter);
+  filtered = filtered.sort((a,b) => {
+    const po = {high:0,medium:1,low:2};
+    if (po[a.priority] !== po[b.priority]) return po[a.priority] - po[b.priority];
+    return new Date(b.added_at) - new Date(a.added_at);
+  });
+  const filters = [['all','全部'],['pending','待完成'],['in_progress','進行中'],['reviewed','已完成'],['archived','已封存']];
+  m.innerHTML = `
+    <div class="page-header"><h1 class="page-title">待學習主題</h1>
+      <button class="btn btn-primary" onclick="showLearnModal()">＋ 新增主題</button></div>
+    <div class="filters">${filters.map(([k,v]) => `<button class="filter-btn ${S.learn.filter===k?'active':''}" onclick="S.learn.filter='${k}';renderPage()">${v}</button>`).join('')}</div>
+    ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">目前沒有主題</div></div>' :
+    `<div class="card-grid">${filtered.map(i => `
+      <div class="card card-click" onclick="openLearn('${esc(i.slug)}')">
+        <div class="card-title"><span class="priority-dot priority-${i.priority}"></span> ${esc(i.title)}</div>
+        <div class="card-desc">${esc(i.description)}</div>
+        <div class="card-meta">
+          <span class="badge badge-${i.status}">${i.status}</span>
+          <span>${i.added_at}</span>
+          ${i.assigned_to ? `<span class="author-badge author-${i.assigned_to}">${i.assigned_to}</span>` : ''}
+        </div>
+        <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      </div>`).join('')}</div>`}`;
+}
+
+async function openLearn(s) {
+  const item = S.manifest.learn.find(i => i.slug === s);
+  if (!item) return;
+  try {
+    const md = await API.getMD('learn', s);
+    const parsed = parseFM(md);
+    S.learn.slug = s; S.learn.data = { ...item, body: parsed.body };
+    renderPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderLearnDetail(m) {
+  const d = S.learn.data;
+  const showActions = d.status === 'reviewed' && S.token;
+  m.innerHTML = `
+    <button class="back-btn" onclick="S.learn.slug=null;S.learn.data=null;renderPage()">← 返回列表</button>
+    <div class="content-viewer">
+      <h1 class="content-title">${esc(d.title)}</h1>
+      <div class="content-meta">
+        <span>狀態：<strong><span class="badge badge-${d.status}">${d.status}</span></strong></span>
+        <span>優先級：<strong><span class="priority-dot priority-${d.priority}"></span> ${d.priority}</strong></span>
+        <span>新增者：<strong>${esc(d.added_by)}</strong></span>
+        ${d.assigned_to ? `<span>負責人：<strong class="author-badge author-${d.assigned_to}">${d.assigned_to}</strong></span>` : ''}
+      </div>
+      <div class="md-body">${marked.parse(d.body)}</div>
+      ${showActions ? `<div class="content-actions">
+        <button class="btn btn-warning btn-sm" onclick="learnReset('${esc(d.id)}')">🔄 重新研究</button>
+        <button class="btn btn-ghost btn-sm" onclick="learnArchive('${esc(d.id)}')">📦 封存</button>
+      </div>` : ''}
+    </div>`;
+  document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
+}
+
+async function learnAction(id, updates, msg) {
+  if (!S.token || !S.manifest) return toast('請先認證', 'error');
+  try {
+    const um = { ...S.manifest, learn: S.manifest.learn.map(i => i.id === id ? { ...i, ...updates } : i), updated_at: new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um, null, 2), msg);
+    S.manifest = um; S.learn.slug = null; S.learn.data = null;
+    toast('操作成功'); renderPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+function learnReset(id) { learnAction(id, { status:'pending', assigned_to:null, insight_ref:null }, `chore(manifest): reset ${id}`); }
+function learnArchive(id) { learnAction(id, { status:'archived' }, `chore(manifest): archive ${id}`); }
+
+function showLearnModal() {
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">新增學習主題</div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="ml-title" placeholder="輸入主題標題"></div>
+        <div class="form-group"><label>描述</label><textarea class="form-textarea" id="ml-desc" placeholder="輸入主題描述"></textarea></div>
+        <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="ml-tags" placeholder="llm, qwen3"></div>
+        <div class="form-group"><label>優先級</label><select class="form-select" id="ml-pri"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="ml-submit" onclick="submitLearn()">新增</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('ml-title').focus();
+}
+
+async function submitLearn() {
+  const title = document.getElementById('ml-title').value.trim();
+  const desc = document.getElementById('ml-desc').value.trim();
+  const tags = document.getElementById('ml-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const pri = document.getElementById('ml-pri').value;
+  if (!title || !desc) return toast('請填寫標題和描述', 'warning');
+  if (!S.token) return toast('請先設定 Token', 'error');
+  const btn = document.getElementById('ml-submit'); btn.disabled = true; btn.textContent = '新增中...';
+  try {
+    const s = slug(title); const id = genId('learn', S.manifest.learn);
+    const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n## 背景\n\n${desc}\n\n## 希望研究的方向\n\n- 待補充\n`;
+    await API.createFile(`content/learn/${s}.md`, md, `feat: add learn topic ${s}`);
+    const item = { id, title, description:desc, tags, priority:pri, status:'pending', added_at:new Date().toISOString().split('T')[0], added_by:'joe', assigned_to:null, insight_ref:null, slug:s };
+    const um = { ...S.manifest, learn:[...S.manifest.learn, item], updated_at:new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add learn ${s}`);
+    S.manifest = um; closeModal(); toast('主題已新增！'); renderPage();
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
+}
+function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
+
+/* ===== Insights ===== */
+function renderInsights(m) {
+  if (S.insights.slug && S.insights.data) return renderInsightsDetail(m);
+  const items = (S.manifest ? S.manifest.insights : []).filter(i => i.status !== 'archived')
+    .sort((a,b) => new Date(b.published_at) - new Date(a.published_at));
+  m.innerHTML = `
+    <div class="page-header"><h1 class="page-title">心得分享</h1></div>
+    ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">還沒有心得</div></div>' :
+    `<div class="card-grid">${items.map(i => `
+      <div class="card card-click" onclick="openInsight('${esc(i.slug)}')">
+        <div class="card-title">${esc(i.title)}</div>
+        <div class="card-desc">${esc(i.summary)}</div>
+        <div class="card-meta">
+          <span class="author-badge author-${i.author}">${i.author}</span>
+          <span class="badge badge-${i.status}">${i.status}</span>
+          <span>${i.published_at}</span>
+        </div>
+        <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      </div>`).join('')}</div>`}`;
+}
+
+async function openInsight(s) {
+  const item = S.manifest.insights.find(i => i.slug === s);
+  if (!item) return;
+  try {
+    const md = await API.getMD('insights', s);
+    const parsed = parseFM(md);
+    S.insights.slug = s; S.insights.data = { ...item, body: parsed.body };
+    renderPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderInsightsDetail(m) {
+  const d = S.insights.data;
+  const src = S.manifest.learn.find(i => i.id === d.learn_ref);
+  m.innerHTML = `
+    <button class="back-btn" onclick="S.insights.slug=null;S.insights.data=null;renderPage()">← 返回列表</button>
+    <div class="content-viewer">
+      <h1 class="content-title">${esc(d.title)}</h1>
+      <div class="content-meta">
+        <span>作者：<strong class="author-badge author-${d.author}">${d.author}</strong></span>
+        <span>發布：<strong>${d.published_at}</strong></span>
+        ${src ? `<span>來源主題：<a href="#" onclick="event.preventDefault();S.insights.slug=null;S.insights.data=null;S.tab='learn';openLearn('${esc(src.slug)}')">${esc(src.title)}</a></span>` : ''}
+      </div>
+      <div class="md-body">${marked.parse(d.body)}</div>
+      ${d.status !== 'archived' && S.token ? `<div class="content-actions">
+        <button class="btn btn-danger btn-sm" onclick="archiveInsight('${esc(d.id)}')">📦 下架心得</button>
+      </div>` : ''}
+    </div>`;
+  document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
+}
+
+async function archiveInsight(id) {
+  if (!S.token) return toast('請先認證', 'error');
+  try {
+    const um = { ...S.manifest, insights: S.manifest.insights.map(i => i.id === id ? { ...i, status:'archived' } : i), updated_at: new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): archive insight ${id}`);
+    S.manifest = um; S.insights.slug = null; S.insights.data = null;
+    toast('已下架'); renderPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+/* ===== Discuss ===== */
+function renderDiscuss(m) {
+  if (S.discuss.slug && S.discuss.thread) return renderDiscussDetail(m);
+  const items = (S.manifest ? S.manifest.discuss : []).sort((a,b) => {
+    if (a.status === 'pinned' && b.status !== 'pinned') return -1;
+    if (b.status === 'pinned' && a.status !== 'pinned') return 1;
+    return new Date(b.last_reply_at || 0) - new Date(a.last_reply_at || 0);
+  });
+  m.innerHTML = `
+    <div class="page-header"><h1 class="page-title">討論區</h1>
+      <button class="btn btn-primary" onclick="showDiscussModal()">＋ 發起新討論</button></div>
+    ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">還沒有討論</div></div>' :
+    `<div style="display:flex;flex-direction:column;gap:12px">${items.map(i => `
+      <div class="card card-click" onclick="openDiscuss('${esc(i.slug)}')">
+        <div class="card-title">${i.status === 'pinned' ? '📌 ' : ''}${esc(i.title)}</div>
+        <div class="card-meta">
+          <span>發起者：<strong class="author-badge author-${i.opened_by}">${i.opened_by}</strong></span>
+          <span>回覆：<strong>${i.reply_count}</strong></span>
+          <span class="badge badge-${i.status}">${i.status}</span>
+          ${i.last_reply_at ? `<span>最後回覆：${i.last_reply_at.split('T')[0]}</span>` : ''}
+        </div>
+      </div>`).join('')}</div>`}`;
+}
+
+async function openDiscuss(s) {
+  const item = S.manifest.discuss.find(i => i.slug === s);
+  if (!item) return;
+  try {
+    const md = await API.getMD('discuss', s);
+    const parsed = parseFM(md);
+    S.discuss.slug = s; S.discuss.data = item;
+    S.discuss.thread = parseThread(parsed.body || md);
+    renderPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderDiscussDetail(m) {
+  const d = S.discuss.data, t = S.discuss.thread;
+  m.innerHTML = `
+    <button class="back-btn" onclick="S.discuss.slug=null;S.discuss.data=null;S.discuss.thread=null;renderPage()">← 返回列表</button>
+    <div class="content-viewer">
+      <h1 class="content-title">${esc(d.title)}</h1>
+      <div class="content-meta">
+        <span>發起者：<strong class="author-badge author-${d.opened_by}">${d.opened_by}</strong></span>
+        <span>開設時間：<strong>${d.opened_at}</strong></span>
+        <span>回覆：<strong>${d.reply_count}</strong></span>
+        <span class="badge badge-${d.status}">${d.status}</span>
+      </div>
+      <div class="md-body">${marked.parse(t.main)}</div>
+      ${S.token ? `<div class="content-actions">
+        ${d.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','closed')">🔒 關閉</button>
+          <button class="btn btn-warning btn-sm" onclick="discussAction('${esc(d.id)}','pinned')">📌 釘選</button>` : ''}
+        ${d.status === 'closed' ? `<button class="btn btn-success btn-sm" onclick="discussAction('${esc(d.id)}','open')">🔓 重新開啟</button>` : ''}
+        ${d.status === 'pinned' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','open')">📌 取消釘選</button>` : ''}
+      </div>` : ''}
+      ${t.replies.length > 0 ? `<h3 style="margin-top:24px;font-size:1rem;color:var(--text)">回覆（${t.replies.length}）</h3>
+        ${t.replies.map(r => `<div class="reply-block">
+          <div class="reply-header"><span class="reply-author author-badge author-${r.author}">${r.author}</span><span class="reply-time">${r.timestamp}</span></div>
+          <div class="md-body">${marked.parse(r.content)}</div>
+        </div>`).join('')}` : ''}
+      ${d.status !== 'closed' && S.token ? `<div class="reply-form">
+        <h3 style="font-size:0.95rem;color:var(--text);margin-bottom:10px">新增回覆</h3>
+        <textarea class="form-textarea" id="reply-text" placeholder="輸入回覆內容..."></textarea>
+        <div style="margin-top:10px"><button class="btn btn-primary btn-sm" id="reply-btn" onclick="submitReply()">發送回覆</button></div>
+      </div>` : ''}
+    </div>`;
+  document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
+}
+
+async function discussAction(id, newStatus) {
+  if (!S.token) return toast('請先認證', 'error');
+  try {
+    const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === id ? { ...i, status: newStatus } : i), updated_at: new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): ${newStatus} discuss ${id}`);
+    S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === id);
+    toast('操作成功'); renderPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function submitReply() {
+  const text = document.getElementById('reply-text').value.trim();
+  if (!text) return toast('請輸入回覆內容', 'warning');
+  if (!S.token) return toast('請先認證', 'error');
+  const btn = document.getElementById('reply-btn'); btn.disabled = true; btn.textContent = '發送中...';
+  try {
+    const s = S.discuss.slug, d = S.discuss.data;
+    const existing = await API.getMD('discuss', s);
+    const ts = new Date().toISOString();
+    const newContent = existing + '\n---reply---\nauthor: joe\ntimestamp: ' + ts + '\n\n' + text + '\n';
+    await API.putFile(`content/discuss/${s}.md`, newContent, `chore: reply to ${s}`);
+    const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === d.id ? { ...i, reply_count: i.reply_count + 1, last_reply_at: ts, last_reply_by: 'joe' } : i), updated_at: new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): update discuss ${s}`);
+    S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === d.id);
+    const md = await API.getMD('discuss', s);
+    const parsed = parseFM(md);
+    S.discuss.thread = parseThread(parsed.body || md);
+    toast('回覆已新增！'); renderPage();
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發送回覆'; }
+}
+
+function showDiscussModal() {
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">發起新討論</div>
+        <div class="form-group"><label>討論標題</label><input class="form-input" id="md-title" placeholder="輸入討論標題"></div>
+        <div class="form-group"><label>主文內容</label><textarea class="form-textarea" id="md-content" placeholder="輸入討論主文" style="min-height:150px"></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="md-submit" onclick="submitDiscuss()">發起討論</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('md-title').focus();
+}
+
+async function submitDiscuss() {
+  const title = document.getElementById('md-title').value.trim();
+  const content = document.getElementById('md-content').value.trim();
+  if (!title || !content) return toast('請填寫標題和內容', 'warning');
+  if (!S.token) return toast('請先設定 Token', 'error');
+  const btn = document.getElementById('md-submit'); btn.disabled = true; btn.textContent = '建立中...';
+  try {
+    const s = slug(title); const id = genId('discuss', S.manifest.discuss);
+    const md = `---\nid: ${id}\n---\n\n## 主文\n\n${content}\n`;
+    await API.createFile(`content/discuss/${s}.md`, md, `feat: add discuss ${s}`);
+    const item = { id, title, status:'open', opened_at:new Date().toISOString().split('T')[0], opened_by:'joe', reply_count:0, last_reply_at:null, last_reply_by:null, slug:s };
+    const um = { ...S.manifest, discuss:[...S.manifest.discuss, item], updated_at:new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add discuss ${s}`);
+    S.manifest = um; closeModal(); toast('討論串已建立！'); renderPage();
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發起討論'; }
+}
+
+/* ===== Settings ===== */
+function renderSettings(m) {
+  m.innerHTML = `
+    <div class="page-header"><h1 class="page-title">設定</h1></div>
+    <div class="settings-card">
+      <h2>GitHub 認證</h2>
+      <div class="form-group"><label>GitHub Personal Access Token</label>
+        <input class="form-input" type="password" id="s-token" value="${S.token || ''}" placeholder="ghp_xxxxxxxxxxxx">
+        <div class="settings-hint">💡 Token 僅存在您的瀏覽器 localStorage，不傳送至任何第三方</div>
+      </div>
+      <div class="form-group"><label>Repository Owner</label>
+        <input class="form-input" id="s-owner" value="${esc(S.repo.owner)}" placeholder="your-username"></div>
+      <div class="form-group"><label>Repository Name</label>
+        <input class="form-input" id="s-repo" value="${esc(S.repo.repo)}" placeholder="my-forum"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 儲存設定</button>
+        <button class="btn btn-ghost btn-sm" id="s-verify" onclick="verifyConn()">🔗 驗證連線</button>
+      </div>
+      <div id="s-result"></div>
+    </div>
+    <div class="settings-card settings-about">
+      <h2>關於</h2>
+      <p><strong>Joe's Knowledge Forum v0.2.0</strong></p>
+      <p>單頁面知識論壇，所有數據存儲於 GitHub 倉庫。</p>
+      <ul><li>📚 待學習：記錄待研究主題</li><li>💡 心得：分享研究成果</li><li>💬 討論：知識交流</li></ul>
+      ${S.manifest ? `<p style="margin-top:12px;color:var(--text3);font-size:0.8rem">Manifest 最後更新：${S.manifest.updated_at}</p>` : ''}
+    </div>`;
+}
+
+function saveSettings() {
+  const token = document.getElementById('s-token').value.trim();
+  const owner = document.getElementById('s-owner').value.trim();
+  const repo = document.getElementById('s-repo').value.trim();
+  S.token = token || null; S.repo = { owner, repo };
+  if (token) localStorage.setItem('gh_pat', token); else localStorage.removeItem('gh_pat');
+  localStorage.setItem('repo_config', JSON.stringify(S.repo));
+  toast('設定已儲存'); renderHeader();
+  if (owner && repo) loadManifest().then(renderPage);
+}
+
+async function verifyConn() {
+  const btn = document.getElementById('s-verify');
+  btn.disabled = true; btn.textContent = '驗證中...';
+  try {
+    const ok = await API.verify();
+    document.getElementById('s-result').innerHTML = ok
+      ? '<div class="verify-result" style="background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.3)">✓ GitHub 連線驗證成功！</div>'
+      : '<div class="verify-result" style="background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)">✕ 驗證失敗，請檢查 Token 和 Repo 設定</div>';
+  } catch(e) {
+    document.getElementById('s-result').innerHTML = `<div class="verify-result" style="background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)">✕ ${esc(e.message)}</div>`;
+  }
+  btn.disabled = false; btn.textContent = '🔗 驗證連線';
+}
+
+/* ===== Init ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderApp();
+  if (S.repo.owner && S.repo.repo) loadManifest().then(renderPage);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    </script>
+</body>
+</html>
