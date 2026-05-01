@@ -480,8 +480,8 @@ function renderLearn(m) {
         <div class="card-desc">${esc(i.description)}</div>
         <div class="card-meta">
           <span class="badge badge-${i.status}">${i.status}</span>
-          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleDateString('zh-TW') : i.added_at}</span>
-          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleDateString('zh-TW')}</span>` : ''}
+          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.added_at}</span>
+          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
           ${i.assigned_to ? `<span class="author-badge author-${i.assigned_to}">${i.assigned_to}</span>` : ''}
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
@@ -600,8 +600,8 @@ function renderInsights(m) {
         <div class="card-meta">
           <span class="author-badge author-${i.author}">${i.author}</span>
           <span class="badge badge-${i.status}">${i.status}</span>
-          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleDateString('zh-TW') : i.published_at}</span>
-          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleDateString('zh-TW')}</span>` : ''}
+          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.published_at}</span>
+          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
@@ -631,7 +631,8 @@ function renderInsightsDetail(m) {
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
         <span>作者：<strong class="author-badge author-${d.author}">${d.author}</strong></span>
-        <span>發布：<strong>${d.published_at}</strong></span>
+        <span>發布：<strong>${d.created_at ? new Date(d.created_at).toLocaleString('zh-TW') : d.published_at}</strong></span>
+        ${d.updated_at && d.updated_at !== d.created_at ? `<span title="最後編輯">編輯於：<strong>${new Date(d.updated_at).toLocaleString('zh-TW')}</strong></span>` : ''}
         ${src ? `<span>來源主題：<a href="#" onclick="event.preventDefault();S.insights.slug=null;S.insights.data=null;S.tab='learn';openLearn('${esc(src.slug)}')">${esc(src.title)}</a></span>` : ''}
       </div>
       <div class="md-body">${marked.parse(d.body)}</div>
@@ -862,8 +863,8 @@ function renderDiscuss(m) {
           <span>發起者：<strong class="author-badge author-${i.opened_by}">${i.opened_by}</strong></span>
           <span>回覆：<strong>${i.reply_count}</strong></span>
           <span class="badge badge-${i.status}">${i.status}</span>
-          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleDateString('zh-TW') : i.opened_at}</span>
-          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleDateString('zh-TW')}</span>` : ''}
+          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.opened_at}</span>
+          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
           <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
@@ -892,7 +893,8 @@ function renderDiscussDetail(m) {
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
         <span>發起者：<strong class="author-badge author-${d.opened_by}">${d.opened_by}</strong></span>
-        <span>開設時間：<strong>${d.opened_at}</strong></span>
+        <span>開設時間：<strong>${d.created_at ? new Date(d.created_at).toLocaleString('zh-TW') : d.opened_at}</strong></span>
+        ${d.updated_at && d.updated_at !== d.created_at ? `<span title="最後更新">最後更新：<strong>${new Date(d.updated_at).toLocaleString('zh-TW')}</strong></span>` : ''}
         <span>回覆：<strong>${d.reply_count}</strong></span>
         <span class="badge badge-${d.status}">${d.status}</span>
       </div>
@@ -910,7 +912,7 @@ function renderDiscussDetail(m) {
       
       ${t.replies.length > 0 ? `<h3 style="margin-top:28px;font-size:1.1rem;color:var(--text);margin-bottom:16px">回覆（${t.replies.length}）</h3>
         ${t.replies.map((r, idx) => `<div class="reply-block">
-          <div class="reply-header"><span class="reply-author author-badge author-${r.author}">${r.author}</span><span class="reply-time">${r.timestamp}</span></div>
+          <div class="reply-header"><span class="reply-author author-badge author-${r.author}">${r.author}</span><span class="reply-time">${new Date(r.timestamp).toLocaleString('zh-TW')}</span></div>
           <div class="md-body" style="font-size:0.9rem">${marked.parse(r.content)}</div>
           <div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="scrollToReplyForm()" title="回覆">💬 回覆</button></div>
         </div>`).join('')}` : ''}
@@ -1032,7 +1034,7 @@ function renderTrash(m) {
           <div class="card-title">${esc(i.title)}</div>
           <div class="card-meta">
             <span>類型：<strong>${i.original_type === 'learn' ? '待學習' : i.original_type === 'insights' ? '心得' : '討論'}</strong></span>
-            <span>刪除於：<strong>${i.deleted_at.split('T')[0]}</strong></span>
+            <span>刪除於：<strong>${new Date(i.deleted_at).toLocaleString('zh-TW')}</strong></span>
           </div>
           <div style="margin-top:12px;display:flex;gap:8px">
             <button class="btn btn-success btn-sm" onclick="restoreItem('${esc(i.id)}','${esc(i.original_type)}')" title="恢復">↩️ 恢復</button>
