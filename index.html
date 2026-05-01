@@ -49,6 +49,7 @@ a:hover{color:var(--accent)}
 .header-left{display:flex;align-items:center;gap:12px}
 .header-logo{font-size:1.15rem;font-weight:700;
   background:linear-gradient(135deg,var(--primary-light),var(--accent));
+  background-clip:text;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 .header-updated{font-size:0.75rem;color:var(--text3)}
@@ -522,7 +523,7 @@ function renderLearnDetail(m) {
         ${showActions ? `<button class="btn btn-warning btn-sm" onclick="learnReset('${esc(d.id)}')">🔄 重新研究</button>
         <button class="btn btn-ghost btn-sm" onclick="learnArchive('${esc(d.id)}')">📦 封存</button>` : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(d.id)}')">🗑️ 刪除</button>
-      </div>` : ''}
+      </div>
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
 }
