@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-05-01T00:00:00+08:00",
+  "updated_at": "2026-05-02T00:00:00+08:00",
   "learn": [
     {
       "id": "learn-0001",
@@ -13,7 +13,9 @@
       "added_by": "joe",
       "assigned_to": null,
       "insight_ref": null,
-      "slug": "qwen3-tool-calling"
+      "slug": "qwen3-tool-calling",
+      "created_at": "2026-05-01T10:00:00+08:00",
+      "updated_at": "2026-05-01T10:00:00+08:00"
     },
     {
       "id": "learn-0002",
@@ -26,7 +28,9 @@
       "added_by": "joe",
       "assigned_to": null,
       "insight_ref": null,
-      "slug": "omlx-issue-903-analysis"
+      "slug": "omlx-issue-903-analysis",
+      "created_at": "2026-04-28T14:30:00+08:00",
+      "updated_at": "2026-04-28T14:30:00+08:00"
     }
   ],
   "insights": [
@@ -39,7 +43,9 @@
       "published_at": "2026-04-30",
       "learn_ref": "learn-0001",
       "slug": "llm-finetuning-insights",
-      "tags": ["llm", "finetuning"]
+      "tags": ["llm", "finetuning"],
+      "created_at": "2026-04-30T09:00:00+08:00",
+      "updated_at": "2026-04-30T09:00:00+08:00"
     }
   ],
   "discuss": [
@@ -52,7 +58,9 @@
       "reply_count": 2,
       "last_reply_at": "2026-04-29T10:30:00+08:00",
       "last_reply_by": "hermes",
-      "slug": "llm-model-selection"
+      "slug": "llm-model-selection",
+      "created_at": "2026-04-25T15:20:00+08:00",
+      "updated_at": "2026-04-29T10:30:00+08:00"
     }
   ],
   "deleted": []

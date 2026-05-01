@@ -480,7 +480,8 @@ function renderLearn(m) {
         <div class="card-desc">${esc(i.description)}</div>
         <div class="card-meta">
           <span class="badge badge-${i.status}">${i.status}</span>
-          <span>${i.added_at}</span>
+          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleDateString('zh-TW') : i.added_at}</span>
+          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleDateString('zh-TW')}</span>` : ''}
           ${i.assigned_to ? `<span class="author-badge author-${i.assigned_to}">${i.assigned_to}</span>` : ''}
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
@@ -568,9 +569,10 @@ async function submitLearn() {
   const btn = document.getElementById('ml-submit'); btn.disabled = true; btn.textContent = '新增中...';
   try {
     const s = slug(title); const id = genId('learn', S.manifest.learn);
+    const now = new Date().toISOString();
     const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n## 背景\n\n${desc}\n\n## 希望研究的方向\n\n- 待補充\n`;
     await API.createFile(`content/learn/${s}.md`, md, `feat: add learn topic ${s}`);
-    const item = { id, title, description:desc, tags, priority:pri, status:'pending', added_at:new Date().toISOString().split('T')[0], added_by:'joe', assigned_to:null, insight_ref:null, slug:s };
+    const item = { id, title, description:desc, tags, priority:pri, status:'pending', added_at:new Date().toISOString().split('T')[0], added_by:'joe', assigned_to:null, insight_ref:null, slug:s, created_at:now, updated_at:now };
     const um = { ...S.manifest, learn:[...S.manifest.learn, item], updated_at:new Date().toISOString() };
     await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add learn ${s}`);
     S.manifest = um; closeModal(); toast('主題已新增！'); renderPage();
@@ -598,7 +600,8 @@ function renderInsights(m) {
         <div class="card-meta">
           <span class="author-badge author-${i.author}">${i.author}</span>
           <span class="badge badge-${i.status}">${i.status}</span>
-          <span>${i.published_at}</span>
+          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleDateString('zh-TW') : i.published_at}</span>
+          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleDateString('zh-TW')}</span>` : ''}
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
@@ -729,7 +732,7 @@ async function submitLearnEdit(id) {
   try {
     const idx = S.manifest.learn.findIndex(i => i.id === id);
     if (idx >= 0) {
-      S.manifest.learn[idx] = { ...S.manifest.learn[idx], title, description: desc, tags, priority: pri };
+      S.manifest.learn[idx] = { ...S.manifest.learn[idx], title, description: desc, tags, priority: pri, updated_at: new Date().toISOString() };
       S.manifest.updated_at = new Date().toISOString();
       await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update learn ${id}`);
       closeModal(); toast('主題已更新！'); renderPage();
@@ -768,8 +771,9 @@ async function submitInsightQuick(learnId) {
     const s = slug(title); const id = genId('insight', S.manifest.insights);
     const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
     await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
-    const now = new Date().toISOString().split('T')[0];
-    const item = { id, title, summary, author:'joe', status:'published', published_at:now, learn_ref:learnId, slug:s, tags };
+    const now = new Date().toISOString();
+    const publishedDate = now.split('T')[0];
+    const item = { id, title, summary, author:'joe', status:'published', published_at:publishedDate, learn_ref:learnId, slug:s, tags, created_at:now, updated_at:now };
     const um = { ...S.manifest, insights:[...S.manifest.insights, item], updated_at:new Date().toISOString() };
     await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add insight ${s}`);
     S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
@@ -829,8 +833,9 @@ async function submitInsight() {
     const s = slug(title); const id = genId('insight', S.manifest.insights);
     const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
     await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
-    const now = new Date().toISOString().split('T')[0];
-    const item = { id, title, summary, author:'joe', status:'published', published_at:now, learn_ref:learnRef, slug:s, tags };
+    const now = new Date().toISOString();
+    const publishedDate = now.split('T')[0];
+    const item = { id, title, summary, author:'joe', status:'published', published_at:publishedDate, learn_ref:learnRef, slug:s, tags, created_at:now, updated_at:now };
     const um = { ...S.manifest, insights:[...S.manifest.insights, item], updated_at:new Date().toISOString() };
     await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add insight ${s}`);
     S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
@@ -857,7 +862,8 @@ function renderDiscuss(m) {
           <span>發起者：<strong class="author-badge author-${i.opened_by}">${i.opened_by}</strong></span>
           <span>回覆：<strong>${i.reply_count}</strong></span>
           <span class="badge badge-${i.status}">${i.status}</span>
-          ${i.last_reply_at ? `<span>最後回覆：${i.last_reply_at.split('T')[0]}</span>` : ''}
+          <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleDateString('zh-TW') : i.opened_at}</span>
+          ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleDateString('zh-TW')}</span>` : ''}
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
           <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
@@ -944,7 +950,7 @@ async function submitReply() {
     const ts = new Date().toISOString();
     const newContent = existing + '\n---reply---\nauthor: joe\ntimestamp: ' + ts + '\n\n' + text + '\n';
     await API.putFile(`content/discuss/${s}.md`, newContent, `chore: reply to ${s}`);
-    const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === d.id ? { ...i, reply_count: i.reply_count + 1, last_reply_at: ts, last_reply_by: 'joe' } : i), updated_at: new Date().toISOString() };
+    const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === d.id ? { ...i, reply_count: i.reply_count + 1, last_reply_at: ts, last_reply_by: 'joe', updated_at: ts } : i), updated_at: new Date().toISOString() };
     await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): update discuss ${s}`);
     S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === d.id);
     const md = await API.getMD('discuss', s);
@@ -980,9 +986,11 @@ async function submitDiscuss() {
   const btn = document.getElementById('md-submit'); btn.disabled = true; btn.textContent = '建立中...';
   try {
     const s = slug(title); const id = genId('discuss', S.manifest.discuss);
+    const now = new Date().toISOString();
+    const openedDate = now.split('T')[0];
     const md = `---\nid: ${id}\n---\n\n## 主文\n\n${content}\n`;
     await API.createFile(`content/discuss/${s}.md`, md, `feat: add discuss ${s}`);
-    const item = { id, title, status:'open', opened_at:new Date().toISOString().split('T')[0], opened_by:'joe', reply_count:0, last_reply_at:null, last_reply_by:null, slug:s };
+    const item = { id, title, status:'open', opened_at:openedDate, opened_by:'joe', reply_count:0, last_reply_at:null, last_reply_by:null, slug:s, created_at:now, updated_at:now };
     const um = { ...S.manifest, discuss:[...S.manifest.discuss, item], updated_at:new Date().toISOString() };
     await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add discuss ${s}`);
     S.manifest = um; closeModal(); toast('討論串已建立！'); renderPage();
