@@ -569,7 +569,8 @@ function renderInsights(m) {
   const items = (S.manifest ? S.manifest.insights : []).filter(i => i.status !== 'archived')
     .sort((a,b) => new Date(b.published_at) - new Date(a.published_at));
   m.innerHTML = `
-    <div class="page-header"><h1 class="page-title">心得分享</h1></div>
+    <div class="page-header"><h1 class="page-title">心得分享</h1>
+      <button class="btn btn-primary" onclick="showInsightModal()">＋ 新增心得</button></div>
     ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">還沒有心得</div></div>' :
     `<div class="card-grid">${items.map(i => `
       <div class="card card-click" onclick="openInsight('${esc(i.slug)}')">
@@ -624,6 +625,47 @@ async function archiveInsight(id) {
     toast('已下架'); renderPage();
   } catch(e) { toast(e.message, 'error'); }
 }
+
+function showInsightModal() {
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">新增心得分享</div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="mi-title" placeholder="輸入心得標題"></div>
+        <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-summary" placeholder="輸入心得摘要"></textarea></div>
+        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-tags" placeholder="llm, finetuning"></div>
+        <div class="form-group"><label>關聯主題（可選）</label><select class="form-select" id="mi-learn"><option value="">-- 不關聯 --</option>${(S.manifest?.learn || []).map(i => `<option value="${esc(i.id)}">${esc(i.title)}</option>`).join('')}</select></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="mi-submit" onclick="submitInsight()">新增</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('mi-title').focus();
+}
+
+async function submitInsight() {
+  const title = document.getElementById('mi-title').value.trim();
+  const summary = document.getElementById('mi-summary').value.trim();
+  const content = document.getElementById('mi-content').value.trim();
+  const tags = document.getElementById('mi-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const learnRef = document.getElementById('mi-learn').value || null;
+  if (!title || !summary || !content) return toast('請填寫標題、摘要和內容', 'warning');
+  if (!S.token) return toast('請先設定 Token', 'error');
+  const btn = document.getElementById('mi-submit'); btn.disabled = true; btn.textContent = '新增中...';
+  try {
+    const s = slug(title); const id = genId('insight', S.manifest.insights);
+    const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
+    await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
+    const now = new Date().toISOString().split('T')[0];
+    const item = { id, title, summary, author:'joe', status:'published', published_at:now, learn_ref:learnRef, slug:s, tags };
+    const um = { ...S.manifest, insights:[...S.manifest.insights, item], updated_at:new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add insight ${s}`);
+    S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
+}
+
 
 /* ===== Discuss ===== */
 function renderDiscuss(m) {
