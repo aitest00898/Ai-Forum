@@ -393,6 +393,7 @@ const API = {
 async function loadManifest() {
   try {
     S.manifest = await API.getManifest();
+    if (!S.manifest.deleted) S.manifest.deleted = [];
     renderHeader();
   } catch (e) { toast(e.message, 'error'); }
 }
@@ -436,18 +437,23 @@ function renderSidebar() {
     </div>
     <div class="nav-sep"></div>
     <div class="nav-group">
+      <button class="nav-btn ${S.tab==='trash'?'active':''}" onclick="switchTab('trash')">
+        <span class="nav-icon">🗑️</span><span>垃圾桶</span></button>
+    </div>
+    <div class="nav-sep"></div>
+    <div class="nav-group">
       <button class="nav-btn ${S.tab==='settings'?'active':''}" onclick="switchTab('settings')">
         <span class="nav-icon">⚙️</span><span>設定</span></button>
     </div>`;
 }
 
-function switchTab(t) { S.tab = t; renderSidebar(); renderPage(); }
 function renderPage() {
   const m = document.getElementById('main-content');
   if (!m) return;
   if (S.tab === 'learn') renderLearn(m);
   else if (S.tab === 'insights') renderInsights(m);
   else if (S.tab === 'discuss') renderDiscuss(m);
+  else if (S.tab === 'trash') renderTrash(m);
   else renderSettings(m);
 }
 
@@ -477,6 +483,11 @@ function renderLearn(m) {
           ${i.assigned_to ? `<span class="author-badge author-${i.assigned_to}">${i.assigned_to}</span>` : ''}
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
+          <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(i.id)}','${esc(i.title)}')" title="新增心得">📝 心得</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(i.id)}')" title="刪除">🗑️ 刪除</button>
+        </div>
       </div>`).join('')}</div>`}`;
 }
 
@@ -505,9 +516,12 @@ function renderLearnDetail(m) {
         ${d.assigned_to ? `<span>負責人：<strong class="author-badge author-${d.assigned_to}">${d.assigned_to}</strong></span>` : ''}
       </div>
       <div class="md-body">${marked.parse(d.body)}</div>
-      ${showActions ? `<div class="content-actions">
-        <button class="btn btn-warning btn-sm" onclick="learnReset('${esc(d.id)}')">🔄 重新研究</button>
-        <button class="btn btn-ghost btn-sm" onclick="learnArchive('${esc(d.id)}')">📦 封存</button>
+      <div class="content-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(d.id)}')">✏️ 編輯</button>
+        <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(d.id)}','${esc(d.title)}')">📝 新增心得</button>
+        ${showActions ? `<button class="btn btn-warning btn-sm" onclick="learnReset('${esc(d.id)}')">🔄 重新研究</button>
+        <button class="btn btn-ghost btn-sm" onclick="learnArchive('${esc(d.id)}')">📦 封存</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(d.id)}')">🗑️ 刪除</button>
       </div>` : ''}
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
@@ -561,7 +575,10 @@ async function submitLearn() {
     S.manifest = um; closeModal(); toast('主題已新增！'); renderPage();
   } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
 }
-function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
+function closeModal() { 
+  document.getElementById('modal-container').innerHTML = ''; 
+  document.getElementById('reply-text').value = '';
+}
 
 /* ===== Insights ===== */
 function renderInsights(m) {
@@ -582,6 +599,10 @@ function renderInsights(m) {
           <span>${i.published_at}</span>
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(i.id)}')" title="刪除">🗑️ 刪除</button>
+        </div>
       </div>`).join('')}</div>`}`;
 }
 
@@ -609,9 +630,10 @@ function renderInsightsDetail(m) {
         ${src ? `<span>來源主題：<a href="#" onclick="event.preventDefault();S.insights.slug=null;S.insights.data=null;S.tab='learn';openLearn('${esc(src.slug)}')">${esc(src.title)}</a></span>` : ''}
       </div>
       <div class="md-body">${marked.parse(d.body)}</div>
-      ${d.status !== 'archived' && S.token ? `<div class="content-actions">
-        <button class="btn btn-danger btn-sm" onclick="archiveInsight('${esc(d.id)}')">📦 下架心得</button>
-      </div>` : ''}
+      <div class="content-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(d.id)}')">✏️ 編輯</button>
+        ${d.status !== 'archived' && S.token ? `<button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(d.id)}')">🗑️ 刪除</button>` : ''}
+      </div>
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
 }
@@ -624,6 +646,153 @@ async function archiveInsight(id) {
     S.manifest = um; S.insights.slug = null; S.insights.data = null;
     toast('已下架'); renderPage();
   } catch(e) { toast(e.message, 'error'); }
+}
+
+function deleteItem(type, id) {
+  if (!confirm('確定要刪除嗎？此操作可以在垃圾桶中恢復。')) return;
+  if (!S.token) return toast('請先認證', 'error');
+  moveToTrash(type, id);
+}
+
+function moveToTrash(type, id) {
+  if (!S.manifest) return;
+  let item = null;
+  let newType = type;
+  
+  if (type === 'learn') {
+    item = S.manifest.learn.find(i => i.id === id);
+    if (item) {
+      S.manifest.learn = S.manifest.learn.filter(i => i.id !== id);
+    }
+  } else if (type === 'insights') {
+    item = S.manifest.insights.find(i => i.id === id);
+    if (item) {
+      S.manifest.insights = S.manifest.insights.filter(i => i.id !== id);
+    }
+  } else if (type === 'discuss') {
+    item = S.manifest.discuss.find(i => i.id === id);
+    if (item) {
+      S.manifest.discuss = S.manifest.discuss.filter(i => i.id !== id);
+    }
+  }
+  
+  if (item) {
+    S.manifest.deleted = (S.manifest.deleted || []).concat([{ ...item, original_type: type, deleted_at: new Date().toISOString() }]);
+    S.manifest.updated_at = new Date().toISOString();
+    saveManifest(`chore(manifest): move ${type}/${id} to trash`);
+  }
+}
+
+function saveManifest(msg) {
+  if (!S.token || !S.manifest) return toast('請先認證', 'error');
+  API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), msg)
+    .then(() => {
+      S.learn.slug = null; S.learn.data = null;
+      S.insights.slug = null; S.insights.data = null;
+      S.discuss.slug = null; S.discuss.data = null; S.discuss.thread = null;
+      toast('操作成功');
+      renderPage();
+    })
+    .catch(e => toast(e.message, 'error'));
+}
+
+function showLearnEditModal(id) {
+  const item = S.manifest.learn.find(i => i.id === id);
+  if (!item) return toast('找不到主題', 'error');
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">編輯學習主題</div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="ml-edit-title" value="${esc(item.title)}" placeholder="輸入主題標題"></div>
+        <div class="form-group"><label>描述</label><textarea class="form-textarea" id="ml-edit-desc" placeholder="輸入主題描述">${esc(item.description)}</textarea></div>
+        <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="ml-edit-tags" value="${esc(item.tags.join(', '))}" placeholder="llm, qwen3"></div>
+        <div class="form-group"><label>優先級</label><select class="form-select" id="ml-edit-pri"><option value="low" ${item.priority==='low'?'selected':''}>低</option><option value="medium" ${item.priority==='medium'?'selected':''}>中</option><option value="high" ${item.priority==='high'?'selected':''}>高</option></select></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="ml-edit-submit" onclick="submitLearnEdit('${esc(id)}')">保存</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('ml-edit-title').focus();
+}
+
+async function submitLearnEdit(id) {
+  const title = document.getElementById('ml-edit-title').value.trim();
+  const desc = document.getElementById('ml-edit-desc').value.trim();
+  const tags = document.getElementById('ml-edit-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const pri = document.getElementById('ml-edit-pri').value;
+  if (!title || !desc) return toast('請填寫標題和描述', 'warning');
+  if (!S.token) return toast('請先認證', 'error');
+  const btn = document.getElementById('ml-edit-submit'); btn.disabled = true; btn.textContent = '保存中...';
+  try {
+    const idx = S.manifest.learn.findIndex(i => i.id === id);
+    if (idx >= 0) {
+      S.manifest.learn[idx] = { ...S.manifest.learn[idx], title, description: desc, tags, priority: pri };
+      S.manifest.updated_at = new Date().toISOString();
+      await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update learn ${id}`);
+      closeModal(); toast('主題已更新！'); renderPage();
+    }
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '保存'; }
+}
+
+function showInsightQuickModal(learnId, learnTitle) {
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">新增心得分享（快速）</div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="mi-quick-title" placeholder="輸入心得標題"></div>
+        <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-quick-summary" placeholder="輸入心得摘要"></textarea></div>
+        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-quick-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-quick-tags" placeholder="llm, finetuning"></div>
+        <div class="form-group"><label>關聯主題</label><input class="form-input" value="${esc(learnTitle)}" disabled></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="mi-quick-submit" onclick="submitInsightQuick('${esc(learnId)}')">新增</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('mi-quick-title').focus();
+}
+
+async function submitInsightQuick(learnId) {
+  const title = document.getElementById('mi-quick-title').value.trim();
+  const summary = document.getElementById('mi-quick-summary').value.trim();
+  const content = document.getElementById('mi-quick-content').value.trim();
+  const tags = document.getElementById('mi-quick-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  if (!title || !summary || !content) return toast('請填寫標題、摘要和內容', 'warning');
+  if (!S.token) return toast('請先設定 Token', 'error');
+  const btn = document.getElementById('mi-quick-submit'); btn.disabled = true; btn.textContent = '新增中...';
+  try {
+    const s = slug(title); const id = genId('insight', S.manifest.insights);
+    const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
+    await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
+    const now = new Date().toISOString().split('T')[0];
+    const item = { id, title, summary, author:'joe', status:'published', published_at:now, learn_ref:learnId, slug:s, tags };
+    const um = { ...S.manifest, insights:[...S.manifest.insights, item], updated_at:new Date().toISOString() };
+    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add insight ${s}`);
+    S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
+}
+
+function showInsightEditModal(id) {
+  const item = S.manifest.insights.find(i => i.id === id);
+  if (!item) return toast('找不到心得', 'error');
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">編輯心得分享</div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="mi-edit-title" value="${esc(item.title)}" placeholder="輸入心得標題"></div>
+        <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-edit-summary" placeholder="輸入心得摘要">${esc(item.summary)}</textarea></div>
+        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-edit-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-edit-tags" value="${esc(item.tags.join(', '))}" placeholder="llm, finetuning"></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="mi-edit-submit" onclick="submitInsightEdit('${esc(id)}')" style="display:none">保存</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('mi-edit-title').focus();
+  toast('編輯功能正在開發中', 'warning');
 }
 
 function showInsightModal() {
@@ -688,6 +857,10 @@ function renderDiscuss(m) {
           <span class="badge badge-${i.status}">${i.status}</span>
           ${i.last_reply_at ? `<span>最後回覆：${i.last_reply_at.split('T')[0]}</span>` : ''}
         </div>
+        <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(i.id)}')" title="刪除">🗑️ 刪除</button>
+        </div>
       </div>`).join('')}</div>`}`;
 }
 
@@ -716,24 +889,36 @@ function renderDiscussDetail(m) {
         <span class="badge badge-${d.status}">${d.status}</span>
       </div>
       <div class="md-body">${marked.parse(t.main)}</div>
-      ${S.token ? `<div class="content-actions">
-        ${d.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','closed')">🔒 關閉</button>
-          <button class="btn btn-warning btn-sm" onclick="discussAction('${esc(d.id)}','pinned')">📌 釘選</button>` : ''}
-        ${d.status === 'closed' ? `<button class="btn btn-success btn-sm" onclick="discussAction('${esc(d.id)}','open')">🔓 重新開啟</button>` : ''}
-        ${d.status === 'pinned' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','open')">📌 取消釘選</button>` : ''}
-      </div>` : ''}
-      ${t.replies.length > 0 ? `<h3 style="margin-top:24px;font-size:1rem;color:var(--text)">回覆（${t.replies.length}）</h3>
-        ${t.replies.map(r => `<div class="reply-block">
+      <div class="content-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(d.id)}')">✏️ 編輯</button>
+        ${S.token ? `
+          ${d.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','closed')">🔒 關閉</button>
+            <button class="btn btn-warning btn-sm" onclick="discussAction('${esc(d.id)}','pinned')">📌 釘選</button>` : ''}
+          ${d.status === 'closed' ? `<button class="btn btn-success btn-sm" onclick="discussAction('${esc(d.id)}','open')">🔓 重新開啟</button>` : ''}
+          ${d.status === 'pinned' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','open')">📌 取消釘選</button>` : ''}
+        ` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(d.id)}')">🗑️ 刪除</button>
+      </div>
+      
+      ${t.replies.length > 0 ? `<h3 style="margin-top:28px;font-size:1.1rem;color:var(--text);margin-bottom:16px">回覆（${t.replies.length}）</h3>
+        ${t.replies.map((r, idx) => `<div class="reply-block">
           <div class="reply-header"><span class="reply-author author-badge author-${r.author}">${r.author}</span><span class="reply-time">${r.timestamp}</span></div>
-          <div class="md-body">${marked.parse(r.content)}</div>
+          <div class="md-body" style="font-size:0.9rem">${marked.parse(r.content)}</div>
+          <div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="scrollToReplyForm()" title="回覆">💬 回覆</button></div>
         </div>`).join('')}` : ''}
-      ${d.status !== 'closed' && S.token ? `<div class="reply-form">
+      
+      ${d.status !== 'closed' ? `<div class="reply-form" id="reply-form-section">
         <h3 style="font-size:0.95rem;color:var(--text);margin-bottom:10px">新增回覆</h3>
-        <textarea class="form-textarea" id="reply-text" placeholder="輸入回覆內容..."></textarea>
+        <textarea class="form-textarea" id="reply-text" placeholder="輸入你的回覆..." style="min-height:100px"></textarea>
         <div style="margin-top:10px"><button class="btn btn-primary btn-sm" id="reply-btn" onclick="submitReply()">發送回覆</button></div>
-      </div>` : ''}
+      </div>` : '<div style="padding:16px;background:rgba(239,68,68,0.1);border-radius:var(--r-sm);color:var(--text3);text-align:center">此討論已關閉，無法新增回覆</div>'}
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
+}
+
+function scrollToReplyForm() {
+  const elem = document.getElementById('reply-form-section');
+  if (elem) elem.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function discussAction(id, newStatus) {
@@ -763,6 +948,7 @@ async function submitReply() {
     const md = await API.getMD('discuss', s);
     const parsed = parseFM(md);
     S.discuss.thread = parseThread(parsed.body || md);
+    document.getElementById('reply-text').value = '';
     toast('回覆已新增！'); renderPage();
   } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發送回覆'; }
 }
@@ -798,6 +984,91 @@ async function submitDiscuss() {
     await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add discuss ${s}`);
     S.manifest = um; closeModal(); toast('討論串已建立！'); renderPage();
   } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發起討論'; }
+}
+
+function showDiscussEditModal(id) {
+  const item = S.manifest.discuss.find(i => i.id === id);
+  if (!item) return toast('找不到討論', 'error');
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">編輯討論主題</div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="md-edit-title" value="${esc(item.title)}" placeholder="輸入討論標題"></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" id="md-edit-submit" onclick="submitDiscussEdit('${esc(id)}')" style="display:none">保存</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('md-edit-title').focus();
+  toast('編輯功能正在開發中', 'warning');
+}
+
+/* ===== Trash ===== */
+function renderTrash(m) {
+  const items = S.manifest?.deleted || [];
+  if (items.length === 0) {
+    m.innerHTML = '<div class="empty" style="margin-top:60px"><div class="empty-icon">🗑️</div><div class="empty-text">垃圾桶是空的</div></div>';
+    return;
+  }
+  
+  m.innerHTML = `
+    <div class="page-header"><h1 class="page-title">垃圾桶</h1>
+      <button class="btn btn-danger btn-sm" onclick="clearAllTrash()">🗑️ 清空垃圾桶</button></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${items.map(i => `
+        <div class="card" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)">
+          <div class="card-title">${esc(i.title)}</div>
+          <div class="card-meta">
+            <span>類型：<strong>${i.original_type === 'learn' ? '待學習' : i.original_type === 'insights' ? '心得' : '討論'}</strong></span>
+            <span>刪除於：<strong>${i.deleted_at.split('T')[0]}</strong></span>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-success btn-sm" onclick="restoreItem('${esc(i.id)}','${esc(i.original_type)}')" title="恢復">↩️ 恢復</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItemPermanently('${esc(i.id)}')" title="永久刪除">✕ 永久刪除</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function clearAllTrash() {
+  if (!confirm('確定要清空垃圾桶？此操作無法撤銷。')) return;
+  if (!S.token) return toast('請先認證', 'error');
+  if (!S.manifest) return;
+  S.manifest.deleted = [];
+  S.manifest.updated_at = new Date().toISOString();
+  saveManifest('chore(manifest): clear trash');
+}
+
+function restoreItem(id, type) {
+  if (!S.manifest) return;
+  const item = S.manifest.deleted.find(i => i.id === id);
+  if (!item) return toast('找不到項目', 'error');
+  
+  const restored = { ...item };
+  delete restored.original_type;
+  delete restored.deleted_at;
+  
+  if (type === 'learn') {
+    S.manifest.learn = (S.manifest.learn || []).concat([restored]);
+  } else if (type === 'insights') {
+    S.manifest.insights = (S.manifest.insights || []).concat([restored]);
+  } else if (type === 'discuss') {
+    S.manifest.discuss = (S.manifest.discuss || []).concat([restored]);
+  }
+  
+  S.manifest.deleted = S.manifest.deleted.filter(i => i.id !== id);
+  S.manifest.updated_at = new Date().toISOString();
+  saveManifest(`chore(manifest): restore ${type}/${id}`);
+}
+
+function deleteItemPermanently(id) {
+  if (!confirm('確定要永久刪除嗎？此操作無法撤銷。')) return;
+  if (!S.token) return toast('請先認證', 'error');
+  if (!S.manifest) return;
+  S.manifest.deleted = S.manifest.deleted.filter(i => i.id !== id);
+  S.manifest.updated_at = new Date().toISOString();
+  saveManifest(`chore(manifest): permanently delete ${id}`);
 }
 
 /* ===== Settings ===== */
