@@ -1126,6 +1126,13 @@ async function verifyConn() {
   btn.disabled = false; btn.textContent = '🔗 驗證連線';
 }
 
+/* ===== Tab Switching ===== */
+function switchTab(tabId) {
+  S.tab = tabId;
+  renderPage();
+  renderSidebar();
+}
+
 /* ===== Init ===== */
 document.addEventListener('DOMContentLoaded', () => {
   renderApp();
