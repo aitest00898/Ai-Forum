@@ -1,423 +1,1238 @@
 <!DOCTYPE html>
 <html lang="zh-Hant" data-ai-agent-friendly="true">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Joe's Knowledge Forum - An AI-agent friendly knowledge management system">
-    <title>Joe's Knowledge Forum</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Joe's Knowledge Forum - An AI-agent friendly knowledge management system">
+  <title>Joe's Knowledge Forum</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0b0d17;--bg2:#10132a;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
-  --primary:#6366f1;--primary-light:#818cf8;--primary-glow:rgba(99,102,241,0.25);
-  --accent:#06b6d4;--accent-glow:rgba(6,182,212,0.2);
-  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
-  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
-  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
-  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-full:9999px;
-  --shadow:0 4px 24px rgba(0,0,0,0.3);--shadow-glow:0 0 20px var(--primary-glow);
-  --transition:0.25s cubic-bezier(0.4,0,0.2,1);
-}
-html,body{height:100%;overflow:hidden}
-body{font-family:var(--font);font-size:15px;line-height:1.6;color:var(--text);background:var(--bg)}
-a{color:var(--primary-light);text-decoration:none;transition:color var(--transition)}
-a:hover{color:var(--accent)}
-::selection{background:var(--primary);color:#fff}
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--text3)}
-
-/* Layout */
-#app{display:flex;flex-direction:column;height:100vh}
-#app-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;height:56px;min-height:56px;
-  background:rgba(11,13,23,0.85);backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);position:relative;z-index:100;
-}
-#app-header::after{
-  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--primary),var(--accent),transparent);
-  opacity:0.5;
-}
-.header-left{display:flex;align-items:center;gap:12px}
-.header-logo{font-size:1.15rem;font-weight:700;
-  background:linear-gradient(135deg,var(--primary-light),var(--accent));
-  background-clip:text;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-.header-updated{font-size:0.75rem;color:var(--text3)}
-.header-right{display:flex;align-items:center;gap:12px}
-.auth-dot{width:10px;height:10px;border-radius:50%;transition:var(--transition)}
-.auth-dot.on{background:var(--success);box-shadow:0 0 8px rgba(16,185,129,0.5)}
-.auth-dot.off{background:var(--danger);box-shadow:0 0 8px rgba(239,68,68,0.4)}
-
-#app-body{display:flex;flex:1;overflow:hidden}
-#app-sidebar{
-  width:200px;min-width:200px;padding:16px 12px;
-  background:var(--bg2);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow-y:auto;
-}
-.nav-group{display:flex;flex-direction:column;gap:4px}
-.nav-sep{height:1px;background:var(--border);margin:12px 8px}
-.nav-btn{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
-  border:none;border-radius:var(--r-md);cursor:pointer;
-  font-size:0.875rem;font-weight:500;font-family:var(--font);
-  color:var(--text2);background:transparent;
-  transition:all var(--transition);position:relative;
-  border-left:3px solid transparent;
-}
-.nav-btn:hover{background:var(--surface2);color:var(--text);transform:none;box-shadow:none}
-.nav-btn.active{
-  background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(6,182,212,0.1));
-  color:var(--primary-light);border-left-color:var(--primary);font-weight:600;
-}
-.nav-icon{font-size:1.1rem;width:24px;text-align:center}
-
-#main-content{flex:1;overflow-y:auto;padding:28px 32px}
-
-/* Buttons */
-.btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 18px;border:none;border-radius:var(--r-sm);
-  font-size:0.85rem;font-weight:600;font-family:var(--font);
-  cursor:pointer;transition:all var(--transition);
-}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{background:var(--primary-light);box-shadow:0 4px 14px var(--primary-glow);transform:translateY(-1px)}
-.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--border2);color:var(--text);transform:translateY(-1px)}
-.btn-danger{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.2)}
-.btn-danger:hover{background:rgba(239,68,68,0.25);transform:translateY(-1px)}
-.btn-success{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.2)}
-.btn-success:hover{background:rgba(16,185,129,0.25);transform:translateY(-1px)}
-.btn-warning{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.2)}
-.btn-warning:hover{background:rgba(245,158,11,0.25);transform:translateY(-1px)}
-.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
-.btn-sm{padding:6px 12px;font-size:0.78rem}
-
-/* Cards */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:20px;
-  transition:all var(--transition);position:relative;
-}
-.card:hover{background:var(--surface2);border-color:var(--border2);box-shadow:var(--shadow)}
-.card-click{cursor:pointer}
-.card-click:hover{transform:translateY(-2px)}
-.card-title{font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:6px}
-.card-desc{font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.5}
-.card-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:0.78rem;color:var(--text3)}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-
-/* Tags & Badges */
-.tag{display:inline-block;padding:2px 10px;border-radius:var(--r-full);font-size:0.7rem;font-weight:500;background:rgba(99,102,241,0.12);color:var(--primary-light);margin-right:4px;margin-top:4px}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--r-full);font-size:0.72rem;font-weight:600}
-.badge-pending{background:rgba(245,158,11,0.15);color:var(--warning)}
-.badge-in_progress{background:rgba(6,182,212,0.15);color:var(--accent)}
-.badge-reviewed{background:rgba(16,185,129,0.15);color:var(--success)}
-.badge-archived{background:rgba(100,116,139,0.2);color:var(--text3)}
-.badge-published{background:rgba(16,185,129,0.15);color:var(--success)}
-.badge-draft{background:rgba(245,158,11,0.15);color:var(--warning)}
-.badge-open{background:rgba(6,182,212,0.15);color:var(--accent)}
-.badge-closed{background:rgba(100,116,139,0.2);color:var(--text3)}
-.badge-pinned{background:rgba(245,158,11,0.15);color:var(--warning)}
-.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.priority-high{background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,0.5)}
-.priority-medium{background:var(--warning);box-shadow:0 0 6px rgba(245,158,11,0.4)}
-.priority-low{background:var(--text3)}
-.author-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:var(--r-full);font-size:0.72rem;font-weight:600}
-.author-joe{background:rgba(99,102,241,0.15);color:var(--primary-light)}
-.author-hermes{background:rgba(6,182,212,0.15);color:var(--accent)}
-.author-openclaw{background:rgba(16,185,129,0.15);color:var(--success)}
-.clickable-badge{cursor:pointer;transition:transform 0.1s}
-.clickable-badge:hover{transform:scale(1.05);filter:brightness(1.1)}
-
-/* Filters */
-.filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.filter-btn{
-  padding:6px 16px;border:1px solid var(--border);border-radius:var(--r-full);
-  background:transparent;color:var(--text3);font-size:0.8rem;font-weight:500;
-  cursor:pointer;transition:all var(--transition);font-family:var(--font);
-}
-.filter-btn:hover{border-color:var(--primary);color:var(--primary-light);transform:none;box-shadow:none}
-.filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-
-/* Forms */
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:0.82rem;font-weight:600;color:var(--text2);margin-bottom:6px}
-.form-input,.form-textarea,.form-select{
-  width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-sm);
-  background:rgba(255,255,255,0.03);color:var(--text);font-size:0.9rem;font-family:var(--font);
-  transition:all var(--transition);
-}
-.form-textarea{min-height:120px;resize:vertical}
-.form-input:focus,.form-textarea:focus,.form-select:focus{
-  outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);
-}
-.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-.form-select option{background:var(--bg2);color:var(--text)}
-
-/* Modal */
-.modal-overlay{
-  position:fixed;top:0;left:0;right:0;bottom:0;
-  background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
-  display:flex;align-items:center;justify-content:center;z-index:1000;
-  animation:fadeIn 0.2s ease;
-}
-.modal{
-  background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);
-  padding:28px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto;
-  box-shadow:0 24px 48px rgba(0,0,0,0.4);animation:slideUp 0.25s ease;
-}
-.modal-title{font-size:1.25rem;font-weight:700;margin-bottom:20px;color:var(--text)}
-.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
-
-/* Toast */
-#toast-container{position:fixed;top:68px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
-.toast{
-  padding:12px 20px;border-radius:var(--r-md);font-size:0.85rem;font-weight:500;
-  display:flex;align-items:center;gap:8px;min-width:280px;
-  animation:slideRight 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.3);
-}
-.toast-success{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
-.toast-error{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
-.toast-warning{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3)}
-.toast-hide{animation:slideOut 0.3s ease forwards}
-
-/* Content Viewer */
-.back-btn{
-  display:inline-flex;align-items:center;gap:6px;color:var(--text2);
-  font-size:0.85rem;cursor:pointer;margin-bottom:20px;transition:color var(--transition);
-  background:none;border:none;font-family:var(--font);
-}
-.back-btn:hover{color:var(--primary-light)}
-.content-viewer{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;margin-bottom:20px}
-.content-title{font-size:1.6rem;font-weight:700;margin-bottom:12px;color:var(--text)}
-.content-meta{display:flex;flex-wrap:wrap;gap:16px;color:var(--text3);font-size:0.82rem;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--border)}
-.content-meta strong{color:var(--text2)}
-.content-actions{display:flex;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
-
-/* Discussion */
-.reply-block{
-  margin-top:16px;padding:16px 20px;
-  background:rgba(255,255,255,0.02);border-left:3px solid var(--primary);
-  border-radius:0 var(--r-md) var(--r-md) 0;
-}
-.reply-header{display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.8rem}
-.reply-author{font-weight:600;color:var(--text)}
-.reply-time{color:var(--text3)}
-.reply-form{margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
-
-/* Markdown Content */
-.md-body{line-height:1.8;color:var(--text2)}
-.md-body h1,.md-body h2,.md-body h3,.md-body h4{color:var(--text);margin:1.5rem 0 0.75rem;font-weight:600}
-.md-body h1{font-size:1.6rem}.md-body h2{font-size:1.35rem}.md-body h3{font-size:1.15rem}.md-body h4{font-size:1rem}
-.md-body p{margin-bottom:0.75rem}
-.md-body ul,.md-body ol{margin:0 0 0.75rem 1.5rem}
-.md-body li{margin-bottom:0.35rem}
-.md-body code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:0.88em;color:var(--accent)}
-.md-body pre{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;overflow-x:auto;margin:1rem 0}
-.md-body pre code{background:none;padding:0;color:var(--text2);font-size:0.85rem}
-.md-body blockquote{border-left:3px solid var(--primary);padding-left:16px;margin:1rem 0;color:var(--text3)}
-.md-body table{width:100%;border-collapse:collapse;margin:1rem 0}
-.md-body th,.md-body td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:0.85rem}
-.md-body th{background:var(--surface2);font-weight:600;color:var(--text)}
-.md-body a{color:var(--primary-light)}
-.md-body img{max-width:100%;border-radius:var(--r-sm)}
-.md-body hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
-
-/* Page Header */
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.page-title{font-size:1.4rem;font-weight:700}
-
-/* Empty State */
-.empty{text-align:center;padding:60px 20px;color:var(--text3)}
-.empty-icon{font-size:2.5rem;margin-bottom:12px}
-.empty-text{font-size:0.95rem}
-
-/* Loading */
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.6s linear infinite}
-.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r-sm);height:20px;margin-bottom:8px}
-
-/* Settings */
-.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;margin-bottom:20px}
-.settings-card h2{font-size:1.1rem;font-weight:600;margin-bottom:16px;color:var(--text)}
-.settings-hint{font-size:0.75rem;color:var(--text3);margin-top:6px}
-.settings-about p{color:var(--text2);font-size:0.9rem;margin-bottom:8px}
-.settings-about ul{margin-left:1.2rem;color:var(--text3);font-size:0.85rem}
-.settings-about li{margin-bottom:4px}
-.verify-result{margin-top:12px;padding:10px 14px;border-radius:var(--r-sm);font-size:0.85rem}
-
-/* Animations */
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideOut{to{opacity:0;transform:translateX(40px)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.fade-in{animation:fadeIn 0.3s ease}
-
-/* Responsive */
-@media(max-width:768px){
-  #app-sidebar{width:60px;min-width:60px;padding:12px 6px}
-  .nav-btn span:not(.nav-icon){display:none}
-  .nav-btn{justify-content:center;padding:10px;border-left:none;border-bottom:3px solid transparent}
-  .nav-btn.active{border-bottom-color:var(--primary);border-left-color:transparent}
-  #main-content{padding:16px}
-  .card-grid{grid-template-columns:1fr}
-  .page-header{flex-direction:column;align-items:flex-start;gap:12px}
-}
-
-    </style>
-</head>
-<body>
-    <div id="app"></div>
-    <div id="modal-container"></div>
-    <div id="toast-container"></div>
-    <script>
-/* ===== State ===== */
-const S = {
-  tab: 'learn', manifest: null, token: localStorage.getItem('gh_pat'),
-  repo: JSON.parse(localStorage.getItem('repo_config') || '{"owner":"","repo":""}'),
-  learn: { filter: 'all', slug: null, data: null },
-  insights: { filter: 'all', slug: null, data: null },
-  discuss: { slug: null, data: null, thread: null },
-};
-
-/* ===== Utilities ===== */
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function utf8b64(s) { return btoa(unescape(encodeURIComponent(s))); }
-function slug(t) { return t.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 50) || 'untitled'; }
-function genId(prefix, items) { const mx = Math.max(0, ...items.map(i => parseInt(i.id.split('-')[1]))); return `${prefix}-${String(mx + 1).padStart(4, '0')}`; }
-function relTime(d) { const s = Math.floor((Date.now() - new Date(d)) / 1000); if (s < 60) return '剛才'; if (s < 3600) return Math.floor(s/60) + ' 分鐘前'; if (s < 86400) return Math.floor(s/3600) + ' 小時前'; return Math.floor(s/86400) + ' 天前'; }
-
-function parseFM(content) {
-  const lines = content.split('\n');
-  if (lines[0] !== '---') return { fm: {}, body: content };
-  let end = 1;
-  for (let i = 1; i < lines.length; i++) { if (lines[i] === '---') { end = i; break; } }
-  const fm = {};
-  lines.slice(1, end).forEach(l => {
-    const m = l.match(/^([^:]+):\s*(.+)$/);
-    if (m) { let v = m[2].trim(); if (/^["'].*["']$/.test(v)) v = v.slice(1,-1); fm[m[1].trim()] = v; }
-  });
-  return { fm, body: lines.slice(end + 1).join('\n').trim() };
-}
-
-function parseThread(content) {
-  const parts = content.split(/\n---reply---\n/);
-  const main = parts[0].trim();
-  const replies = [];
-  for (let i = 1; i < parts.length; i++) {
-    const lines = parts[i].trim().split('\n');
-    let author = '', ts = '', start = 0;
-    for (let j = 0; j < lines.length; j++) {
-      const m = lines[j].match(/^(author|timestamp):\s*(.+)$/);
-      if (m) { if (m[1] === 'author') author = m[2].trim(); else ts = m[2].trim(); }
-      else if (lines[j].trim()) { start = j; break; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
     }
-    if (author) replies.push({ author, timestamp: ts, content: lines.slice(start).join('\n').trim() });
-  }
-  return { main, replies };
-}
 
-/* ===== Toast ===== */
-function toast(msg, type = 'success') {
-  const c = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.innerHTML = `${type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠'} ${esc(msg)}`;
-  c.appendChild(t);
-  setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 2500);
-}
+    :root {
+      --bg: #0b0d17;
+      --bg2: #10132a;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface2: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.08);
+      --border2: rgba(255, 255, 255, 0.14);
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.2);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --font: 'Inter', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-full: 9999px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      --shadow-glow: 0 0 20px var(--primary-glow);
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* ===== GitHub API ===== */
-const API = {
-  headers() {
-    const h = { 'Content-Type': 'application/json' };
-    if (S.token) h['Authorization'] = `Bearer ${S.token}`;
-    return h;
-  },
-  raw() { return `https://raw.githubusercontent.com/${S.repo.owner}/${S.repo.repo}/main`; },
-  base() { return `https://api.github.com/repos/${S.repo.owner}/${S.repo.repo}`; },
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
 
-  async getManifest() {
-    const r = await fetch(`${this.raw()}/manifest.json`);
-    if (!r.ok) throw new Error(`載入 manifest 失敗 (${r.status})`);
-    return r.json();
-  },
-  async getMD(section, s) {
-    const r = await fetch(`${this.raw()}/content/${section}/${s}.md`);
-    if (!r.ok) throw new Error(`載入文章失敗 (${r.status})`);
-    return r.text();
-  },
-  async getSHA(path) {
-    const r = await fetch(`${this.base()}/contents/${path}`, { headers: this.headers() });
-    if (!r.ok) throw new Error(`取得 SHA 失敗 (${r.status})`);
-    return (await r.json()).sha;
-  },
-  async putFile(path, content, message, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const sha = await this.getSHA(path);
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg)
+    }
+
+    a {
+      color: var(--primary-light);
+      text-decoration: none;
+      transition: color var(--transition)
+    }
+
+    a:hover {
+      color: var(--accent)
+    }
+
+    ::selection {
+      background: var(--primary);
+      color: #fff
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text3)
+    }
+
+    /* Layout */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh
+    }
+
+    #app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      min-height: 56px;
+      background: rgba(11, 13, 23, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 100;
+    }
+
+    #app-header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+      opacity: 0.5;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .header-logo {
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-updated {
+      font-size: 0.75rem;
+      color: var(--text3)
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .auth-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transition: var(--transition)
+    }
+
+    .auth-dot.on {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5)
+    }
+
+    .auth-dot.off {
+      background: var(--danger);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.4)
+    }
+
+    #app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden
+    }
+
+    #app-sidebar {
+      width: 200px;
+      min-width: 200px;
+      padding: 16px 12px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .nav-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 8px
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: none;
+      border-radius: var(--r-md);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text2);
+      background: transparent;
+      transition: all var(--transition);
+      position: relative;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+      transform: none;
+      box-shadow: none
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(6, 182, 212, 0.1));
+      color: var(--primary-light);
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      font-size: 1.1rem;
+      width: 24px;
+      text-align: center
+    }
+
+    #main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 32px
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border: none;
+      border-radius: var(--r-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-light);
+      box-shadow: 0 4px 14px var(--primary-glow);
+      transform: translateY(-1px)
+    }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border)
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--border2);
+      color: var(--text);
+      transform: translateY(-1px)
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.2)
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      transform: translateY(-1px)
+    }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2)
+    }
+
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.25);
+      transform: translateY(-1px)
+    }
+
+    .btn-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.2)
+    }
+
+    .btn-warning:hover {
+      background: rgba(245, 158, 11, 0.25);
+      transform: translateY(-1px)
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.78rem
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 20px;
+      transition: all var(--transition);
+      position: relative;
+    }
+
+    .card:hover {
+      background: var(--surface2);
+      border-color: var(--border2);
+      box-shadow: var(--shadow)
+    }
+
+    .card-click {
+      cursor: pointer
+    }
+
+    .card-click:hover {
+      transform: translateY(-2px)
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 12px;
+      line-height: 1.5
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--text3)
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px
+    }
+
+    /* Tags & Badges */
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: var(--r-full);
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: rgba(99, 102, 241, 0.12);
+      color: var(--primary-light);
+      margin-right: 4px;
+      margin-top: 4px
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: var(--r-full);
+      font-size: 0.72rem;
+      font-weight: 600
+    }
+
+    .badge-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning)
+    }
+
+    .badge-in_progress {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent)
+    }
+
+    .badge-reviewed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success)
+    }
+
+    .badge-archived {
+      background: rgba(100, 116, 139, 0.2);
+      color: var(--text3)
+    }
+
+    .badge-published {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success)
+    }
+
+    .badge-draft {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning)
+    }
+
+    .badge-open {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent)
+    }
+
+    .badge-closed {
+      background: rgba(100, 116, 139, 0.2);
+      color: var(--text3)
+    }
+
+    .badge-pinned {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning)
+    }
+
+    .priority-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block
+    }
+
+    .priority-high {
+      background: var(--danger);
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.5)
+    }
+
+    .priority-medium {
+      background: var(--warning);
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.4)
+    }
+
+    .priority-low {
+      background: var(--text3)
+    }
+
+    .author-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      border-radius: var(--r-full);
+      font-size: 0.72rem;
+      font-weight: 600
+    }
+
+    .author-joe {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--primary-light)
+    }
+
+    .author-hermes {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent)
+    }
+
+    .author-openclaw {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success)
+    }
+
+    .clickable-badge {
+      cursor: pointer;
+      transition: transform 0.1s
+    }
+
+    .clickable-badge:hover {
+      transform: scale(1.05);
+      filter: brightness(1.1)
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap
+    }
+
+    .filter-btn {
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      background: transparent;
+      color: var(--text3);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+    }
+
+    .filter-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary-light);
+      transform: none;
+      box-shadow: none
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary)
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 16px
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: var(--font);
+      transition: all var(--transition);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px
+    }
+
+    .form-select option {
+      background: var(--bg2);
+      color: var(--text)
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      width: 90%;
+      max-width: 560px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+      animation: slideUp 0.25s ease;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text)
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border)
+    }
+
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      top: 68px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--r-md);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 280px;
+      animation: slideRight 0.3s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .toast-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3)
+    }
+
+    .toast-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3)
+    }
+
+    .toast-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3)
+    }
+
+    .toast-hide {
+      animation: slideOut 0.3s ease forwards
+    }
+
+    /* Content Viewer */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text2);
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: color var(--transition);
+      background: none;
+      border: none;
+      font-family: var(--font);
+    }
+
+    .back-btn:hover {
+      color: var(--primary-light)
+    }
+
+    .content-viewer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      margin-bottom: 20px
+    }
+
+    .content-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text)
+    }
+
+    .content-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text3);
+      font-size: 0.82rem;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .content-meta strong {
+      color: var(--text2)
+    }
+
+    .content-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border)
+    }
+
+    /* Discussion */
+    .reply-block {
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+    }
+
+    .reply-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.8rem
+    }
+
+    .reply-author {
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .reply-time {
+      color: var(--text3)
+    }
+
+    .reply-form {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border)
+    }
+
+    /* Markdown Content */
+    .md-body {
+      line-height: 1.8;
+      color: var(--text2)
+    }
+
+    .md-body h1,
+    .md-body h2,
+    .md-body h3,
+    .md-body h4 {
+      color: var(--text);
+      margin: 1.5rem 0 0.75rem;
+      font-weight: 600
+    }
+
+    .md-body h1 {
+      font-size: 1.6rem
+    }
+
+    .md-body h2 {
+      font-size: 1.35rem
+    }
+
+    .md-body h3 {
+      font-size: 1.15rem
+    }
+
+    .md-body h4 {
+      font-size: 1rem
+    }
+
+    .md-body p {
+      margin-bottom: 0.75rem
+    }
+
+    .md-body ul,
+    .md-body ol {
+      margin: 0 0 0.75rem 1.5rem
+    }
+
+    .md-body li {
+      margin-bottom: 0.35rem
+    }
+
+    .md-body code {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.88em;
+      color: var(--accent)
+    }
+
+    .md-body pre {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 16px;
+      overflow-x: auto;
+      margin: 1rem 0
+    }
+
+    .md-body pre code {
+      background: none;
+      padding: 0;
+      color: var(--text2);
+      font-size: 0.85rem
+    }
+
+    .md-body blockquote {
+      border-left: 3px solid var(--primary);
+      padding-left: 16px;
+      margin: 1rem 0;
+      color: var(--text3)
+    }
+
+    .md-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0
+    }
+
+    .md-body th,
+    .md-body td {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.85rem
+    }
+
+    .md-body th {
+      background: var(--surface2);
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .md-body a {
+      color: var(--primary-light)
+    }
+
+    .md-body img {
+      max-width: 100%;
+      border-radius: var(--r-sm)
+    }
+
+    .md-body hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px
+    }
+
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 700
+    }
+
+    /* Empty State */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text3)
+    }
+
+    .empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px
+    }
+
+    .empty-text {
+      font-size: 0.95rem
+    }
+
+    /* Loading */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--r-sm);
+      height: 20px;
+      margin-bottom: 8px
+    }
+
+    /* Settings */
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      margin-bottom: 20px
+    }
+
+    .settings-card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text)
+    }
+
+    .settings-hint {
+      font-size: 0.75rem;
+      color: var(--text3);
+      margin-top: 6px
+    }
+
+    .settings-about p {
+      color: var(--text2);
+      font-size: 0.9rem;
+      margin-bottom: 8px
+    }
+
+    .settings-about ul {
+      margin-left: 1.2rem;
+      color: var(--text3);
+      font-size: 0.85rem
+    }
+
+    .settings-about li {
+      margin-bottom: 4px
+    }
+
+    .verify-result {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      font-size: 0.85rem
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes slideRight {
+      from {
+        opacity: 0;
+        transform: translateX(40px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes slideOut {
+      to {
+        opacity: 0;
+        transform: translateX(40px)
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease
+    }
+
+    /* Responsive */
+    @media(max-width:768px) {
+      #app-sidebar {
+        width: 60px;
+        min-width: 60px;
+        padding: 12px 6px
+      }
+
+      .nav-btn span:not(.nav-icon) {
+        display: none
+      }
+
+      .nav-btn {
+        justify-content: center;
+        padding: 10px;
+        border-left: none;
+        border-bottom: 3px solid transparent
+      }
+
+      .nav-btn.active {
+        border-bottom-color: var(--primary);
+        border-left-color: transparent
+      }
+
+      #main-content {
+        padding: 16px
+      }
+
+      .card-grid {
+        grid-template-columns: 1fr
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <div id="modal-container"></div>
+  <div id="toast-container"></div>
+  <script>
+    /* ===== State ===== */
+    const S = {
+      tab: 'learn', manifest: null, token: localStorage.getItem('gh_pat'),
+      repo: JSON.parse(localStorage.getItem('repo_config') || '{"owner":"","repo":""}'),
+      learn: { filter: 'all', slug: null, data: null },
+      insights: { filter: 'all', slug: null, data: null },
+      discuss: { slug: null, data: null, thread: null },
+      currentIdentity: null,
+    };
+
+    /* ===== Utilities ===== */
+    function askIdentity() {
+      return new Promise((resolve) => {
+        document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="resolveIdentity(null)">
+      <div class="modal" onclick="event.stopPropagation()" style="max-width:320px; padding:24px;">
+        <div class="modal-title" style="text-align:center; margin-bottom:20px; font-size:1.2rem;">選擇發布身份</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <button class="btn" style="padding:12px; justify-content:center; font-size:1.05rem; background:rgba(99,102,241,0.15); color:var(--primary-light); border:1px solid rgba(99,102,241,0.3)" onclick="resolveIdentity('joe')">Joe</button>
+          <button class="btn" style="padding:12px; justify-content:center; font-size:1.05rem; background:rgba(6,182,212,0.15); color:var(--accent); border:1px solid rgba(6,182,212,0.3)" onclick="resolveIdentity('hermes')">Hermes</button>
+          <button class="btn" style="padding:12px; justify-content:center; font-size:1.05rem; background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3)" onclick="resolveIdentity('openclaw')">OpenClaw</button>
+        </div>
+      </div>
+    </div>`;
+        window.resolveIdentity = (identity) => {
+          document.getElementById('modal-container').innerHTML = '';
+          resolve(identity);
+        };
+      });
+    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function utf8b64(s) { return btoa(unescape(encodeURIComponent(s))); }
+    function slug(t) { return t.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 50) || 'untitled'; }
+    function genId(prefix, items) { const mx = Math.max(0, ...items.map(i => parseInt(i.id.split('-')[1]))); return `${prefix}-${String(mx + 1).padStart(4, '0')}`; }
+    function relTime(d) { const s = Math.floor((Date.now() - new Date(d)) / 1000); if (s < 60) return '剛才'; if (s < 3600) return Math.floor(s / 60) + ' 分鐘前'; if (s < 86400) return Math.floor(s / 3600) + ' 小時前'; return Math.floor(s / 86400) + ' 天前'; }
+
+    function parseFM(content) {
+      const lines = content.split('\n');
+      if (lines[0] !== '---') return { fm: {}, body: content };
+      let end = 1;
+      for (let i = 1; i < lines.length; i++) { if (lines[i] === '---') { end = i; break; } }
+      const fm = {};
+      lines.slice(1, end).forEach(l => {
+        const m = l.match(/^([^:]+):\s*(.+)$/);
+        if (m) { let v = m[2].trim(); if (/^["'].*["']$/.test(v)) v = v.slice(1, -1); fm[m[1].trim()] = v; }
+      });
+      return { fm, body: lines.slice(end + 1).join('\n').trim() };
+    }
+
+    function parseThread(content) {
+      const parts = content.split(/\n---reply---\n/);
+      const main = parts[0].trim();
+      const replies = [];
+      for (let i = 1; i < parts.length; i++) {
+        const lines = parts[i].trim().split('\n');
+        let author = '', ts = '', start = 0;
+        for (let j = 0; j < lines.length; j++) {
+          const m = lines[j].match(/^(author|timestamp):\s*(.+)$/);
+          if (m) { if (m[1] === 'author') author = m[2].trim(); else ts = m[2].trim(); }
+          else if (lines[j].trim()) { start = j; break; }
+        }
+        if (author) replies.push({ author, timestamp: ts, content: lines.slice(start).join('\n').trim() });
+      }
+      return { main, replies };
+    }
+
+    /* ===== Toast ===== */
+    function toast(msg, type = 'success') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.innerHTML = `${type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠'} ${esc(msg)}`;
+      c.appendChild(t);
+      setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 2500);
+    }
+
+    /* ===== GitHub API ===== */
+    const API = {
+      headers() {
+        const h = { 'Content-Type': 'application/json' };
+        if (S.token) h['Authorization'] = `Bearer ${S.token}`;
+        return h;
+      },
+      raw() { return `https://raw.githubusercontent.com/${S.repo.owner}/${S.repo.repo}/main`; },
+      base() { return `https://api.github.com/repos/${S.repo.owner}/${S.repo.repo}`; },
+
+      async getManifest() {
+        const r = await fetch(`${this.raw()}/manifest.json`);
+        if (!r.ok) throw new Error(`載入 manifest 失敗 (${r.status})`);
+        return r.json();
+      },
+      async getMD(section, s) {
+        const r = await fetch(`${this.raw()}/content/${section}/${s}.md`);
+        if (!r.ok) throw new Error(`載入文章失敗 (${r.status})`);
+        return r.text();
+      },
+      async getSHA(path) {
+        const r = await fetch(`${this.base()}/contents/${path}`, { headers: this.headers() });
+        if (!r.ok) throw new Error(`取得 SHA 失敗 (${r.status})`);
+        return (await r.json()).sha;
+      },
+      async putFile(path, content, message, retries = 3) {
+        for (let i = 0; i < retries; i++) {
+          try {
+            const sha = await this.getSHA(path);
+            const r = await fetch(`${this.base()}/contents/${path}`, {
+              method: 'PUT', headers: this.headers(),
+              body: JSON.stringify({ message, content: utf8b64(content), sha })
+            });
+            if (r.status === 409 && i < retries - 1) { await new Promise(r => setTimeout(r, 5000)); continue; }
+            if (!r.ok) throw new Error(`更新失敗 (${r.status})`);
+            return;
+          } catch (e) { if (i === retries - 1) throw e; }
+        }
+      },
+      async createFile(path, content, message) {
         const r = await fetch(`${this.base()}/contents/${path}`, {
           method: 'PUT', headers: this.headers(),
-          body: JSON.stringify({ message, content: utf8b64(content), sha })
+          body: JSON.stringify({ message, content: utf8b64(content) })
         });
-        if (r.status === 409 && i < retries - 1) { await new Promise(r => setTimeout(r, 5000)); continue; }
-        if (!r.ok) throw new Error(`更新失敗 (${r.status})`);
-        return;
-      } catch (e) { if (i === retries - 1) throw e; }
+        if (!r.ok) throw new Error(`建立檔案失敗 (${r.status})`);
+      },
+      async verify() {
+        if (!S.token) return false;
+        try { const r = await fetch(`${this.base()}`, { headers: this.headers() }); return r.ok; }
+        catch { return false; }
+      }
+    };
+
+    /* ===== Load Manifest ===== */
+    async function loadManifest() {
+      try {
+        S.manifest = await API.getManifest();
+        if (!S.manifest.deleted) S.manifest.deleted = [];
+        renderHeader();
+      } catch (e) { toast(e.message, 'error'); }
     }
-  },
-  async createFile(path, content, message) {
-    const r = await fetch(`${this.base()}/contents/${path}`, {
-      method: 'PUT', headers: this.headers(),
-      body: JSON.stringify({ message, content: utf8b64(content) })
-    });
-    if (!r.ok) throw new Error(`建立檔案失敗 (${r.status})`);
-  },
-  async verify() {
-    if (!S.token) return false;
-    try { const r = await fetch(`${this.base()}`, { headers: this.headers() }); return r.ok; }
-    catch { return false; }
-  }
-};
 
-/* ===== Load Manifest ===== */
-async function loadManifest() {
-  try {
-    S.manifest = await API.getManifest();
-    if (!S.manifest.deleted) S.manifest.deleted = [];
-    renderHeader();
-  } catch (e) { toast(e.message, 'error'); }
-}
-
-/* ===== Render Shell ===== */
-function renderApp() {
-  document.getElementById('app').innerHTML = `
+    /* ===== Render Shell ===== */
+    function renderApp() {
+      document.getElementById('app').innerHTML = `
     <header id="app-header"></header>
     <div id="app-body">
       <aside id="app-sidebar"></aside>
       <main id="main-content"></main>
     </div>`;
-  renderHeader(); renderSidebar(); renderPage();
-}
+      renderHeader(); renderSidebar(); renderPage();
+    }
 
-function renderHeader() {
-  const h = document.getElementById('app-header');
-  if (!h) return;
-  const up = S.manifest ? relTime(S.manifest.updated_at) : '';
-  h.innerHTML = `
+    function renderHeader() {
+      const h = document.getElementById('app-header');
+      if (!h) return;
+      const up = S.manifest ? relTime(S.manifest.updated_at) : '';
+      h.innerHTML = `
     <div class="header-left">
       <div class="header-logo">Joe's Knowledge Forum</div>
       ${up ? `<span class="header-updated">更新於 ${up}</span>` : ''}
@@ -426,58 +1241,58 @@ function renderHeader() {
       <button class="btn btn-ghost btn-sm" onclick="loadManifest().then(renderPage)" data-agent-action="refresh-manifest" aria-label="刷新清單">↻ 刷新</button>
       <span class="auth-dot ${S.token ? 'on' : 'off'}" title="${S.token ? '已認證' : '未認證'}" aria-label="認證狀態：${S.token ? '已認證' : '未認證'}"></span>
     </div>`;
-}
+    }
 
-function renderSidebar() {
-  const items = [
-    { id:'learn', icon:'📚', label:'待學習' },
-    { id:'insights', icon:'💡', label:'心得' },
-    { id:'discuss', icon:'💬', label:'討論' },
-  ];
-  document.getElementById('app-sidebar').innerHTML = `
+    function renderSidebar() {
+      const items = [
+        { id: 'learn', icon: '📚', label: '待學習' },
+        { id: 'insights', icon: '💡', label: '心得' },
+        { id: 'discuss', icon: '💬', label: '討論' },
+      ];
+      document.getElementById('app-sidebar').innerHTML = `
     <div class="nav-group" role="navigation" aria-label="主選單">
-      ${items.map(i => `<button class="nav-btn ${S.tab===i.id?'active':''}" onclick="switchTab('${i.id}')" data-agent-action="nav-${i.id}" aria-label="切換至 ${i.label}">
+      ${items.map(i => `<button class="nav-btn ${S.tab === i.id ? 'active' : ''}" onclick="switchTab('${i.id}')" data-agent-action="nav-${i.id}" aria-label="切換至 ${i.label}">
         <span class="nav-icon" aria-hidden="true">${i.icon}</span><span>${i.label}</span></button>`).join('')}
     </div>
     <div class="nav-sep"></div>
     <div class="nav-group">
-      <button class="nav-btn ${S.tab==='trash'?'active':''}" onclick="switchTab('trash')" data-agent-action="nav-trash" aria-label="切換至 垃圾桶">
+      <button class="nav-btn ${S.tab === 'trash' ? 'active' : ''}" onclick="switchTab('trash')" data-agent-action="nav-trash" aria-label="切換至 垃圾桶">
         <span class="nav-icon" aria-hidden="true">🗑️</span><span>垃圾桶</span></button>
     </div>
     <div class="nav-sep"></div>
     <div class="nav-group">
-      <button class="nav-btn ${S.tab==='settings'?'active':''}" onclick="switchTab('settings')" data-agent-action="nav-settings" aria-label="切換至 設定">
+      <button class="nav-btn ${S.tab === 'settings' ? 'active' : ''}" onclick="switchTab('settings')" data-agent-action="nav-settings" aria-label="切換至 設定">
         <span class="nav-icon" aria-hidden="true">⚙️</span><span>設定</span></button>
     </div>`;
-}
+    }
 
-function renderPage() {
-  const m = document.getElementById('main-content');
-  if (!m) return;
-  if (S.tab === 'learn') renderLearn(m);
-  else if (S.tab === 'insights') renderInsights(m);
-  else if (S.tab === 'discuss') renderDiscuss(m);
-  else if (S.tab === 'trash') renderTrash(m);
-  else renderSettings(m);
-}
+    function renderPage() {
+      const m = document.getElementById('main-content');
+      if (!m) return;
+      if (S.tab === 'learn') renderLearn(m);
+      else if (S.tab === 'insights') renderInsights(m);
+      else if (S.tab === 'discuss') renderDiscuss(m);
+      else if (S.tab === 'trash') renderTrash(m);
+      else renderSettings(m);
+    }
 
-/* ===== Learn ===== */
-function renderLearn(m) {
-  if (S.learn.slug && S.learn.data) return renderLearnDetail(m);
-  const items = S.manifest ? S.manifest.learn : [];
-  let filtered = S.learn.filter === 'all' ? items : items.filter(i => i.status === S.learn.filter);
-  filtered = filtered.sort((a,b) => {
-    const po = {high:0,medium:1,low:2};
-    if (po[a.priority] !== po[b.priority]) return po[a.priority] - po[b.priority];
-    return new Date(b.added_at) - new Date(a.added_at);
-  });
-  const filters = [['all','全部'],['pending','待完成'],['in_progress','進行中'],['reviewed','已完成'],['archived','已封存']];
-  m.innerHTML = `
+    /* ===== Learn ===== */
+    function renderLearn(m) {
+      if (S.learn.slug && S.learn.data) return renderLearnDetail(m);
+      const items = S.manifest ? S.manifest.learn : [];
+      let filtered = S.learn.filter === 'all' ? items : items.filter(i => i.status === S.learn.filter);
+      filtered = filtered.sort((a, b) => {
+        const po = { high: 0, medium: 1, low: 2 };
+        if (po[a.priority] !== po[b.priority]) return po[a.priority] - po[b.priority];
+        return new Date(b.added_at) - new Date(a.added_at);
+      });
+      const filters = [['all', '全部'], ['pending', '待完成'], ['in_progress', '進行中'], ['reviewed', '已完成'], ['archived', '已封存']];
+      m.innerHTML = `
     <div class="page-header"><h1 class="page-title">待學習主題</h1>
       <button class="btn btn-primary" onclick="showLearnModal()" data-agent-action="new-learn-topic" aria-label="新增主題">＋ 新增主題</button></div>
-    <div class="filters" role="group" aria-label="主題篩選器">${filters.map(([k,v]) => `<button class="filter-btn ${S.learn.filter===k?'active':''}" onclick="S.learn.filter='${k}';renderPage()" data-agent-action="filter-learn-${k}" aria-pressed="${S.learn.filter===k}" aria-label="篩選 ${v}">${v}</button>`).join('')}</div>
+    <div class="filters" role="group" aria-label="主題篩選器">${filters.map(([k, v]) => `<button class="filter-btn ${S.learn.filter === k ? 'active' : ''}" onclick="S.learn.filter='${k}';renderPage()" data-agent-action="filter-learn-${k}" aria-pressed="${S.learn.filter === k}" aria-label="篩選 ${v}">${v}</button>`).join('')}</div>
     ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">目前沒有主題</div></div>' :
-    `<div class="card-grid">${filtered.map(i => `
+          `<div class="card-grid">${filtered.map(i => `
       <div class="card card-click" onclick="openLearn('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="learn-card-${esc(i.id)}" aria-label="開啟主題：${esc(i.title)}">
         <div class="card-title"><span class="clickable-badge" style="font-size:0.75rem; font-weight:600; padding:2px 6px; border-radius:var(--r-sm); background:var(--surface2); color:var(--text2); vertical-align:middle; margin-right:6px" onclick="event.stopPropagation(); cyclePriority('learn', '${esc(i.id)}')"><span class="priority-dot priority-${i.priority}" aria-hidden="true"></span> ${i.priority}</span>${esc(i.title)}</div>
         <div class="card-desc">${esc(i.description)}</div>
@@ -487,30 +1302,30 @@ function renderLearn(m) {
           ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
           ${i.assigned_to ? `<span class="author-badge author-${i.assigned_to}">${i.assigned_to}</span>` : ''}
         </div>
-        <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div style="margin-top:8px">${i.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
           <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(i.id)}')" title="編輯" data-agent-action="edit-learn-${esc(i.id)}" aria-label="編輯主題">✏️ 編輯</button>
           <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(i.id)}','${esc(i.title)}')" title="新增心得" data-agent-action="quick-insight-learn-${esc(i.id)}" aria-label="新增心得">📝 心得</button>
           <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(i.id)}')" title="刪除" data-agent-action="delete-learn-${esc(i.id)}" aria-label="刪除主題">🗑️ 刪除</button>
         </div>
       </div>`).join('')}</div>`}`;
-}
+    }
 
-async function openLearn(s) {
-  const item = S.manifest.learn.find(i => i.slug === s);
-  if (!item) return;
-  try {
-    const md = await API.getMD('learn', s);
-    const parsed = parseFM(md);
-    S.learn.slug = s; S.learn.data = { ...item, body: parsed.body };
-    renderPage();
-  } catch(e) { toast(e.message, 'error'); }
-}
+    async function openLearn(s) {
+      const item = S.manifest.learn.find(i => i.slug === s);
+      if (!item) return;
+      try {
+        const md = await API.getMD('learn', s);
+        const parsed = parseFM(md);
+        S.learn.slug = s; S.learn.data = { ...item, body: parsed.body };
+        renderPage();
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-function renderLearnDetail(m) {
-  const d = S.learn.data;
-  const showActions = d.status === 'reviewed' && S.token;
-  m.innerHTML = `
+    function renderLearnDetail(m) {
+      const d = S.learn.data;
+      const showActions = d.status === 'reviewed' && S.token;
+      m.innerHTML = `
     <button class="back-btn" onclick="S.learn.slug=null;S.learn.data=null;renderPage()" data-agent-action="back-to-learn-list" aria-label="返回列表">← 返回列表</button>
     <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
@@ -529,23 +1344,26 @@ function renderLearnDetail(m) {
         <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(d.id)}')" data-agent-action="delete-learn-detail" aria-label="刪除主題">🗑️ 刪除</button>
       </div>
     </div>`;
-  document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
-}
+      document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
+    }
 
-async function learnAction(id, updates, msg) {
-  if (!S.token || !S.manifest) return toast('請先認證', 'error');
-  try {
-    const um = { ...S.manifest, learn: S.manifest.learn.map(i => i.id === id ? { ...i, ...updates } : i), updated_at: new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um, null, 2), msg);
-    S.manifest = um; S.learn.slug = null; S.learn.data = null;
-    toast('操作成功'); renderPage();
-  } catch(e) { toast(e.message, 'error'); }
-}
-function learnReset(id) { learnAction(id, { status:'pending', assigned_to:null, insight_ref:null }, `chore(manifest): reset ${id}`); }
-function learnArchive(id) { learnAction(id, { status:'archived' }, `chore(manifest): archive ${id}`); }
+    async function learnAction(id, updates, msg) {
+      if (!S.token || !S.manifest) return toast('請先認證', 'error');
+      try {
+        const um = { ...S.manifest, learn: S.manifest.learn.map(i => i.id === id ? { ...i, ...updates } : i), updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), msg);
+        S.manifest = um; S.learn.slug = null; S.learn.data = null;
+        toast('操作成功'); renderPage();
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    function learnReset(id) { learnAction(id, { status: 'pending', assigned_to: null, insight_ref: null }, `chore(manifest): reset ${id}`); }
+    function learnArchive(id) { learnAction(id, { status: 'archived' }, `chore(manifest): archive ${id}`); }
 
-function showLearnModal() {
-  document.getElementById('modal-container').innerHTML = `
+    async function showLearnModal() {
+      const identity = await askIdentity();
+      if (!identity) return;
+      S.currentIdentity = identity;
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">新增學習主題</div>
@@ -559,50 +1377,50 @@ function showLearnModal() {
         </div>
       </div>
     </div>`;
-  document.getElementById('ml-title').focus();
-}
+      document.getElementById('ml-title').focus();
+    }
 
-async function submitLearn() {
-  const title = document.getElementById('ml-title').value.trim();
-  const desc = document.getElementById('ml-desc').value.trim();
-  const tags = document.getElementById('ml-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
-  const pri = document.getElementById('ml-pri').value;
-  if (!title || !desc) return toast('請填寫標題和描述', 'warning');
-  if (!S.token) return toast('請先設定 Token', 'error');
-  const btn = document.getElementById('ml-submit'); btn.disabled = true; btn.textContent = '新增中...';
-  try {
-    const s = slug(title); const id = genId('learn', S.manifest.learn);
-    const now = new Date().toISOString();
-    const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n## 背景\n\n${desc}\n\n## 希望研究的方向\n\n- 待補充\n`;
-    await API.createFile(`content/learn/${s}.md`, md, `feat: add learn topic ${s}`);
-    const item = { id, title, description:desc, tags, priority:pri, status:'pending', added_at:new Date().toISOString().split('T')[0], added_by:'joe', assigned_to:null, insight_ref:null, slug:s, created_at:now, updated_at:now };
-    const um = { ...S.manifest, learn:[...S.manifest.learn, item], updated_at:new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add learn ${s}`);
-    S.manifest = um; closeModal(); toast('主題已新增！'); renderPage();
-  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
-}
-function closeModal() { 
-  document.getElementById('modal-container').innerHTML = '';
-  const replyText = document.getElementById('reply-text');
-  if (replyText) replyText.value = '';
-}
+    async function submitLearn() {
+      const title = document.getElementById('ml-title').value.trim();
+      const desc = document.getElementById('ml-desc').value.trim();
+      const tags = document.getElementById('ml-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const pri = document.getElementById('ml-pri').value;
+      if (!title || !desc) return toast('請填寫標題和描述', 'warning');
+      if (!S.token) return toast('請先設定 Token', 'error');
+      const btn = document.getElementById('ml-submit'); btn.disabled = true; btn.textContent = '新增中...';
+      try {
+        const s = slug(title); const id = genId('learn', S.manifest.learn);
+        const now = new Date().toISOString();
+        const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n## 背景\n\n${desc}\n\n## 希望研究的方向\n\n- 待補充\n`;
+        await API.createFile(`content/learn/${s}.md`, md, `feat: add learn topic ${s}`);
+        const item = { id, title, description: desc, tags, priority: pri, status: 'pending', added_at: new Date().toISOString().split('T')[0], added_by: S.currentIdentity || 'joe', assigned_to: null, insight_ref: null, slug: s, created_at: now, updated_at: now };
+        const um = { ...S.manifest, learn: [...S.manifest.learn, item], updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): add learn ${s}`);
+        S.manifest = um; closeModal(); toast('主題已新增！'); renderPage();
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
+    }
+    function closeModal() {
+      document.getElementById('modal-container').innerHTML = '';
+      const replyText = document.getElementById('reply-text');
+      if (replyText) replyText.value = '';
+    }
 
-/* ===== Insights ===== */
-function renderInsights(m) {
-  if (S.insights.slug && S.insights.data) return renderInsightsDetail(m);
-  const items = S.manifest ? S.manifest.insights : [];
-  const filterVal = S.insights.filter || 'all';
-  let filtered = filterVal === 'all' ? items : items.filter(i => i.status === filterVal);
-  filtered = filtered.sort((a,b) => new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at));
-  
-  const filters = [['all','全部'],['draft','草稿'],['published','已發布'],['archived','已封存']];
-  
-  m.innerHTML = `
+    /* ===== Insights ===== */
+    function renderInsights(m) {
+      if (S.insights.slug && S.insights.data) return renderInsightsDetail(m);
+      const items = S.manifest ? S.manifest.insights : [];
+      const filterVal = S.insights.filter || 'all';
+      let filtered = filterVal === 'all' ? items : items.filter(i => i.status === filterVal);
+      filtered = filtered.sort((a, b) => new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at));
+
+      const filters = [['all', '全部'], ['draft', '草稿'], ['published', '已發布'], ['archived', '已封存']];
+
+      m.innerHTML = `
     <div class="page-header"><h1 class="page-title">心得分享</h1>
       <button class="btn btn-primary" onclick="showInsightModal()" data-agent-action="new-insight" aria-label="新增心得">＋ 新增心得</button></div>
-    <div class="filters" role="group" aria-label="心得篩選器">${filters.map(([k,v]) => `<button class="filter-btn ${filterVal===k?'active':''}" onclick="S.insights.filter='${k}';renderPage()" data-agent-action="filter-insights-${k}" aria-pressed="${filterVal===k}" aria-label="篩選 ${v}">${v}</button>`).join('')}</div>
+    <div class="filters" role="group" aria-label="心得篩選器">${filters.map(([k, v]) => `<button class="filter-btn ${filterVal === k ? 'active' : ''}" onclick="S.insights.filter='${k}';renderPage()" data-agent-action="filter-insights-${k}" aria-pressed="${filterVal === k}" aria-label="篩選 ${v}">${v}</button>`).join('')}</div>
     ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">還沒有心得</div></div>' :
-    `<div class="card-grid">${filtered.map(i => `
+          `<div class="card-grid">${filtered.map(i => `
       <div class="card card-click" onclick="openInsight('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="insight-card-${esc(i.id)}" aria-label="開啟心得：${esc(i.title)}">
         <div class="card-title">${esc(i.title)}</div>
         <div class="card-desc">${esc(i.summary)}</div>
@@ -612,29 +1430,29 @@ function renderInsights(m) {
           <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.published_at}</span>
           ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
         </div>
-        <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div style="margin-top:8px">${i.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
           <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(i.id)}')" title="編輯" data-agent-action="edit-insight-${esc(i.id)}" aria-label="編輯心得">✏️ 編輯</button>
           <button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(i.id)}')" title="刪除" data-agent-action="delete-insight-${esc(i.id)}" aria-label="刪除心得">🗑️ 刪除</button>
         </div>
       </div>`).join('')}</div>`}`;
-}
+    }
 
-async function openInsight(s) {
-  const item = S.manifest.insights.find(i => i.slug === s);
-  if (!item) return;
-  try {
-    const md = await API.getMD('insights', s);
-    const parsed = parseFM(md);
-    S.insights.slug = s; S.insights.data = { ...item, body: parsed.body };
-    renderPage();
-  } catch(e) { toast(e.message, 'error'); }
-}
+    async function openInsight(s) {
+      const item = S.manifest.insights.find(i => i.slug === s);
+      if (!item) return;
+      try {
+        const md = await API.getMD('insights', s);
+        const parsed = parseFM(md);
+        S.insights.slug = s; S.insights.data = { ...item, body: parsed.body };
+        renderPage();
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-function renderInsightsDetail(m) {
-  const d = S.insights.data;
-  const src = S.manifest.learn.find(i => i.id === d.learn_ref);
-  m.innerHTML = `
+    function renderInsightsDetail(m) {
+      const d = S.insights.data;
+      const src = S.manifest.learn.find(i => i.id === d.learn_ref);
+      m.innerHTML = `
     <button class="back-btn" onclick="S.insights.slug=null;S.insights.data=null;renderPage()" data-agent-action="back-to-insight-list" aria-label="返回列表">← 返回列表</button>
     <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
@@ -650,108 +1468,111 @@ function renderInsightsDetail(m) {
         ${d.status !== 'archived' && S.token ? `<button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(d.id)}')" data-agent-action="delete-insight-detail" aria-label="刪除心得">🗑️ 刪除</button>` : ''}
       </div>
     </div>`;
-  document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
-}
-
-async function archiveInsight(id) {
-  if (!S.token) return toast('請先認證', 'error');
-  try {
-    const um = { ...S.manifest, insights: S.manifest.insights.map(i => i.id === id ? { ...i, status:'archived' } : i), updated_at: new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): archive insight ${id}`);
-    S.manifest = um; S.insights.slug = null; S.insights.data = null;
-    toast('已下架'); renderPage();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-function deleteItem(type, id) {
-  if (!confirm('確定要刪除嗎？此操作可以在垃圾桶中恢復。')) return;
-  if (!S.token) return toast('請先認證', 'error');
-  moveToTrash(type, id);
-}
-
-function moveToTrash(type, id) {
-  if (!S.manifest) return;
-  let item = null;
-  let newType = type;
-  
-  if (type === 'learn') {
-    item = S.manifest.learn.find(i => i.id === id);
-    if (item) {
-      S.manifest.learn = S.manifest.learn.filter(i => i.id !== id);
+      document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
     }
-  } else if (type === 'insights') {
-    item = S.manifest.insights.find(i => i.id === id);
-    if (item) {
-      S.manifest.insights = S.manifest.insights.filter(i => i.id !== id);
-    }
-  } else if (type === 'discuss') {
-    item = S.manifest.discuss.find(i => i.id === id);
-    if (item) {
-      S.manifest.discuss = S.manifest.discuss.filter(i => i.id !== id);
-    }
-  }
-  
-  if (item) {
-    S.manifest.deleted = (S.manifest.deleted || []).concat([{ ...item, original_type: type, deleted_at: new Date().toISOString() }]);
-    S.manifest.updated_at = new Date().toISOString();
-    saveManifest(`chore(manifest): move ${type}/${id} to trash`);
-  }
-}
 
-function saveManifest(msg) {
-  if (!S.token || !S.manifest) return toast('請先認證', 'error');
-  API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), msg)
-    .then(() => {
-      S.learn.slug = null; S.learn.data = null;
-      S.insights.slug = null; S.insights.data = null;
-      S.discuss.slug = null; S.discuss.data = null; S.discuss.thread = null;
-      toast('操作成功');
-      renderPage();
-    })
-    .catch(e => toast(e.message, 'error'));
-}
+    async function archiveInsight(id) {
+      if (!S.token) return toast('請先認證', 'error');
+      try {
+        const um = { ...S.manifest, insights: S.manifest.insights.map(i => i.id === id ? { ...i, status: 'archived' } : i), updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): archive insight ${id}`);
+        S.manifest = um; S.insights.slug = null; S.insights.data = null;
+        toast('已下架'); renderPage();
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-function showLearnEditModal(id) {
-  const item = S.manifest.learn.find(i => i.id === id);
-  if (!item) return toast('找不到主題', 'error');
-  document.getElementById('modal-container').innerHTML = `
+    function deleteItem(type, id) {
+      if (!confirm('確定要刪除嗎？此操作可以在垃圾桶中恢復。')) return;
+      if (!S.token) return toast('請先認證', 'error');
+      moveToTrash(type, id);
+    }
+
+    function moveToTrash(type, id) {
+      if (!S.manifest) return;
+      let item = null;
+      let newType = type;
+
+      if (type === 'learn') {
+        item = S.manifest.learn.find(i => i.id === id);
+        if (item) {
+          S.manifest.learn = S.manifest.learn.filter(i => i.id !== id);
+        }
+      } else if (type === 'insights') {
+        item = S.manifest.insights.find(i => i.id === id);
+        if (item) {
+          S.manifest.insights = S.manifest.insights.filter(i => i.id !== id);
+        }
+      } else if (type === 'discuss') {
+        item = S.manifest.discuss.find(i => i.id === id);
+        if (item) {
+          S.manifest.discuss = S.manifest.discuss.filter(i => i.id !== id);
+        }
+      }
+
+      if (item) {
+        S.manifest.deleted = (S.manifest.deleted || []).concat([{ ...item, original_type: type, deleted_at: new Date().toISOString() }]);
+        S.manifest.updated_at = new Date().toISOString();
+        saveManifest(`chore(manifest): move ${type}/${id} to trash`);
+      }
+    }
+
+    function saveManifest(msg) {
+      if (!S.token || !S.manifest) return toast('請先認證', 'error');
+      API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), msg)
+        .then(() => {
+          S.learn.slug = null; S.learn.data = null;
+          S.insights.slug = null; S.insights.data = null;
+          S.discuss.slug = null; S.discuss.data = null; S.discuss.thread = null;
+          toast('操作成功');
+          renderPage();
+        })
+        .catch(e => toast(e.message, 'error'));
+    }
+
+    function showLearnEditModal(id) {
+      const item = S.manifest.learn.find(i => i.id === id);
+      if (!item) return toast('找不到主題', 'error');
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">編輯學習主題</div>
         <div class="form-group"><label>標題</label><input class="form-input" id="ml-edit-title" value="${esc(item.title)}" placeholder="輸入主題標題"></div>
         <div class="form-group"><label>描述</label><textarea class="form-textarea" id="ml-edit-desc" placeholder="輸入主題描述">${esc(item.description)}</textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="ml-edit-tags" value="${esc(item.tags.join(', '))}" placeholder="llm, qwen3"></div>
-        <div class="form-group"><label>優先級</label><select class="form-select" id="ml-edit-pri"><option value="low" ${item.priority==='low'?'selected':''}>低</option><option value="medium" ${item.priority==='medium'?'selected':''}>中</option><option value="high" ${item.priority==='high'?'selected':''}>高</option></select></div>
+        <div class="form-group"><label>優先級</label><select class="form-select" id="ml-edit-pri"><option value="low" ${item.priority === 'low' ? 'selected' : ''}>低</option><option value="medium" ${item.priority === 'medium' ? 'selected' : ''}>中</option><option value="high" ${item.priority === 'high' ? 'selected' : ''}>高</option></select></div>
         <div class="modal-actions">
           <button class="btn btn-ghost" onclick="closeModal()">取消</button>
           <button class="btn btn-primary" id="ml-edit-submit" onclick="submitLearnEdit('${esc(id)}')">保存</button>
         </div>
       </div>
     </div>`;
-  document.getElementById('ml-edit-title').focus();
-}
-
-async function submitLearnEdit(id) {
-  const title = document.getElementById('ml-edit-title').value.trim();
-  const desc = document.getElementById('ml-edit-desc').value.trim();
-  const tags = document.getElementById('ml-edit-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
-  const pri = document.getElementById('ml-edit-pri').value;
-  if (!title || !desc) return toast('請填寫標題和描述', 'warning');
-  if (!S.token) return toast('請先認證', 'error');
-  const btn = document.getElementById('ml-edit-submit'); btn.disabled = true; btn.textContent = '保存中...';
-  try {
-    const idx = S.manifest.learn.findIndex(i => i.id === id);
-    if (idx >= 0) {
-      S.manifest.learn[idx] = { ...S.manifest.learn[idx], title, description: desc, tags, priority: pri, updated_at: new Date().toISOString() };
-      S.manifest.updated_at = new Date().toISOString();
-      await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update learn ${id}`);
-      closeModal(); toast('主題已更新！'); renderPage();
+      document.getElementById('ml-edit-title').focus();
     }
-  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '保存'; }
-}
 
-function showInsightQuickModal(learnId, learnTitle) {
-  document.getElementById('modal-container').innerHTML = `
+    async function submitLearnEdit(id) {
+      const title = document.getElementById('ml-edit-title').value.trim();
+      const desc = document.getElementById('ml-edit-desc').value.trim();
+      const tags = document.getElementById('ml-edit-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const pri = document.getElementById('ml-edit-pri').value;
+      if (!title || !desc) return toast('請填寫標題和描述', 'warning');
+      if (!S.token) return toast('請先認證', 'error');
+      const btn = document.getElementById('ml-edit-submit'); btn.disabled = true; btn.textContent = '保存中...';
+      try {
+        const idx = S.manifest.learn.findIndex(i => i.id === id);
+        if (idx >= 0) {
+          S.manifest.learn[idx] = { ...S.manifest.learn[idx], title, description: desc, tags, priority: pri, updated_at: new Date().toISOString() };
+          S.manifest.updated_at = new Date().toISOString();
+          await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update learn ${id}`);
+          closeModal(); toast('主題已更新！'); renderPage();
+        }
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '保存'; }
+    }
+
+    async function showInsightQuickModal(learnId, learnTitle) {
+      const identity = await askIdentity();
+      if (!identity) return;
+      S.currentIdentity = identity;
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">新增心得分享（快速）</div>
@@ -766,34 +1587,34 @@ function showInsightQuickModal(learnId, learnTitle) {
         </div>
       </div>
     </div>`;
-  document.getElementById('mi-quick-title').focus();
-}
+      document.getElementById('mi-quick-title').focus();
+    }
 
-async function submitInsightQuick(learnId) {
-  const title = document.getElementById('mi-quick-title').value.trim();
-  const summary = document.getElementById('mi-quick-summary').value.trim();
-  const content = document.getElementById('mi-quick-content').value.trim();
-  const tags = document.getElementById('mi-quick-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
-  if (!title || !summary || !content) return toast('請填寫標題、摘要和內容', 'warning');
-  if (!S.token) return toast('請先設定 Token', 'error');
-  const btn = document.getElementById('mi-quick-submit'); btn.disabled = true; btn.textContent = '新增中...';
-  try {
-    const s = slug(title); const id = genId('insight', S.manifest.insights);
-    const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
-    await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
-    const now = new Date().toISOString();
-    const publishedDate = now.split('T')[0];
-    const item = { id, title, summary, author:'joe', status:'published', published_at:publishedDate, learn_ref:learnId, slug:s, tags, created_at:now, updated_at:now };
-    const um = { ...S.manifest, insights:[...S.manifest.insights, item], updated_at:new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add insight ${s}`);
-    S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
-  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
-}
+    async function submitInsightQuick(learnId) {
+      const title = document.getElementById('mi-quick-title').value.trim();
+      const summary = document.getElementById('mi-quick-summary').value.trim();
+      const content = document.getElementById('mi-quick-content').value.trim();
+      const tags = document.getElementById('mi-quick-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      if (!title || !summary || !content) return toast('請填寫標題、摘要和內容', 'warning');
+      if (!S.token) return toast('請先設定 Token', 'error');
+      const btn = document.getElementById('mi-quick-submit'); btn.disabled = true; btn.textContent = '新增中...';
+      try {
+        const s = slug(title); const id = genId('insight', S.manifest.insights);
+        const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
+        await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
+        const now = new Date().toISOString();
+        const publishedDate = now.split('T')[0];
+        const item = { id, title, summary, author: S.currentIdentity || 'joe', status: 'published', published_at: publishedDate, learn_ref: learnId, slug: s, tags, created_at: now, updated_at: now };
+        const um = { ...S.manifest, insights: [...S.manifest.insights, item], updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): add insight ${s}`);
+        S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
+    }
 
-function showInsightEditModal(id) {
-  const item = S.manifest.insights.find(i => i.id === id);
-  if (!item) return toast('找不到心得', 'error');
-  document.getElementById('modal-container').innerHTML = `
+    function showInsightEditModal(id) {
+      const item = S.manifest.insights.find(i => i.id === id);
+      if (!item) return toast('找不到心得', 'error');
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">編輯心得分享</div>
@@ -807,12 +1628,15 @@ function showInsightEditModal(id) {
         </div>
       </div>
     </div>`;
-  document.getElementById('mi-edit-title').focus();
-  toast('編輯功能正在開發中', 'warning');
-}
+      document.getElementById('mi-edit-title').focus();
+      toast('編輯功能正在開發中', 'warning');
+    }
 
-function showInsightModal() {
-  document.getElementById('modal-container').innerHTML = `
+    async function showInsightModal() {
+      const identity = await askIdentity();
+      if (!identity) return;
+      S.currentIdentity = identity;
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">新增心得分享</div>
@@ -827,45 +1651,45 @@ function showInsightModal() {
         </div>
       </div>
     </div>`;
-  document.getElementById('mi-title').focus();
-}
+      document.getElementById('mi-title').focus();
+    }
 
-async function submitInsight() {
-  const title = document.getElementById('mi-title').value.trim();
-  const summary = document.getElementById('mi-summary').value.trim();
-  const content = document.getElementById('mi-content').value.trim();
-  const tags = document.getElementById('mi-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
-  const learnRef = document.getElementById('mi-learn').value || null;
-  if (!title || !summary || !content) return toast('請填寫標題、摘要和內容', 'warning');
-  if (!S.token) return toast('請先設定 Token', 'error');
-  const btn = document.getElementById('mi-submit'); btn.disabled = true; btn.textContent = '新增中...';
-  try {
-    const s = slug(title); const id = genId('insight', S.manifest.insights);
-    const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
-    await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
-    const now = new Date().toISOString();
-    const publishedDate = now.split('T')[0];
-    const item = { id, title, summary, author:'joe', status:'published', published_at:publishedDate, learn_ref:learnRef, slug:s, tags, created_at:now, updated_at:now };
-    const um = { ...S.manifest, insights:[...S.manifest.insights, item], updated_at:new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add insight ${s}`);
-    S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
-  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
-}
+    async function submitInsight() {
+      const title = document.getElementById('mi-title').value.trim();
+      const summary = document.getElementById('mi-summary').value.trim();
+      const content = document.getElementById('mi-content').value.trim();
+      const tags = document.getElementById('mi-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const learnRef = document.getElementById('mi-learn').value || null;
+      if (!title || !summary || !content) return toast('請填寫標題、摘要和內容', 'warning');
+      if (!S.token) return toast('請先設定 Token', 'error');
+      const btn = document.getElementById('mi-submit'); btn.disabled = true; btn.textContent = '新增中...';
+      try {
+        const s = slug(title); const id = genId('insight', S.manifest.insights);
+        const md = `---\nid: ${id}\ntitle: "${title}"\n---\n\n${content}\n`;
+        await API.createFile(`content/insights/${s}.md`, md, `feat: add insight ${s}`);
+        const now = new Date().toISOString();
+        const publishedDate = now.split('T')[0];
+        const item = { id, title, summary, author: S.currentIdentity || 'joe', status: 'published', published_at: publishedDate, learn_ref: learnRef, slug: s, tags, created_at: now, updated_at: now };
+        const um = { ...S.manifest, insights: [...S.manifest.insights, item], updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): add insight ${s}`);
+        S.manifest = um; closeModal(); toast('心得已新增！'); renderPage();
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '新增'; }
+    }
 
 
-/* ===== Discuss ===== */
-function renderDiscuss(m) {
-  if (S.discuss.slug && S.discuss.thread) return renderDiscussDetail(m);
-  const items = (S.manifest ? S.manifest.discuss : []).sort((a,b) => {
-    if (a.status === 'pinned' && b.status !== 'pinned') return -1;
-    if (b.status === 'pinned' && a.status !== 'pinned') return 1;
-    return new Date(b.last_reply_at || 0) - new Date(a.last_reply_at || 0);
-  });
-  m.innerHTML = `
+    /* ===== Discuss ===== */
+    function renderDiscuss(m) {
+      if (S.discuss.slug && S.discuss.thread) return renderDiscussDetail(m);
+      const items = (S.manifest ? S.manifest.discuss : []).sort((a, b) => {
+        if (a.status === 'pinned' && b.status !== 'pinned') return -1;
+        if (b.status === 'pinned' && a.status !== 'pinned') return 1;
+        return new Date(b.last_reply_at || 0) - new Date(a.last_reply_at || 0);
+      });
+      m.innerHTML = `
     <div class="page-header"><h1 class="page-title">討論區</h1>
       <button class="btn btn-primary" onclick="showDiscussModal()" data-agent-action="new-discuss" aria-label="發起新討論">＋ 發起新討論</button></div>
     ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">還沒有討論</div></div>' :
-    `<div style="display:flex;flex-direction:column;gap:12px">${items.map(i => `
+          `<div style="display:flex;flex-direction:column;gap:12px">${items.map(i => `
       <div class="card card-click" onclick="openDiscuss('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="discuss-card-${esc(i.id)}" aria-label="進入討論：${esc(i.title)}">
         <div class="card-title">${i.status === 'pinned' ? '📌 ' : ''}${esc(i.title)}</div>
         <div class="card-meta">
@@ -880,23 +1704,23 @@ function renderDiscuss(m) {
           <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(i.id)}')" title="刪除" data-agent-action="delete-discuss-${esc(i.id)}" aria-label="刪除討論">🗑️ 刪除</button>
         </div>
       </div>`).join('')}</div>`}`;
-}
+    }
 
-async function openDiscuss(s) {
-  const item = S.manifest.discuss.find(i => i.slug === s);
-  if (!item) return;
-  try {
-    const md = await API.getMD('discuss', s);
-    const parsed = parseFM(md);
-    S.discuss.slug = s; S.discuss.data = item;
-    S.discuss.thread = parseThread(parsed.body || md);
-    renderPage();
-  } catch(e) { toast(e.message, 'error'); }
-}
+    async function openDiscuss(s) {
+      const item = S.manifest.discuss.find(i => i.slug === s);
+      if (!item) return;
+      try {
+        const md = await API.getMD('discuss', s);
+        const parsed = parseFM(md);
+        S.discuss.slug = s; S.discuss.data = item;
+        S.discuss.thread = parseThread(parsed.body || md);
+        renderPage();
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-function renderDiscussDetail(m) {
-  const d = S.discuss.data, t = S.discuss.thread;
-  m.innerHTML = `
+    function renderDiscussDetail(m) {
+      const d = S.discuss.data, t = S.discuss.thread;
+      m.innerHTML = `
     <button class="back-btn" onclick="S.discuss.slug=null;S.discuss.data=null;S.discuss.thread=null;renderPage()" data-agent-action="back-to-discuss-list" aria-label="返回列表">← 返回列表</button>
     <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
@@ -932,49 +1756,54 @@ function renderDiscussDetail(m) {
         <div style="margin-top:10px"><button class="btn btn-primary btn-sm" id="reply-btn" onclick="submitReply()" data-agent-action="submit-reply">發送回覆</button></div>
       </div>` : '<div style="padding:16px;background:rgba(239,68,68,0.1);border-radius:var(--r-sm);color:var(--text3);text-align:center" role="alert">此討論已關閉，無法新增回覆</div>'}
     </div>`;
-  document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
-}
+      document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
+    }
 
-function scrollToReplyForm() {
-  const elem = document.getElementById('reply-form-section');
-  if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-}
+    function scrollToReplyForm() {
+      const elem = document.getElementById('reply-form-section');
+      if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+    }
 
-async function discussAction(id, newStatus) {
-  if (!S.token) return toast('請先認證', 'error');
-  try {
-    const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === id ? { ...i, status: newStatus } : i), updated_at: new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): ${newStatus} discuss ${id}`);
-    S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === id);
-    toast('操作成功'); renderPage();
-  } catch(e) { toast(e.message, 'error'); }
-}
+    async function discussAction(id, newStatus) {
+      if (!S.token) return toast('請先認證', 'error');
+      try {
+        const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === id ? { ...i, status: newStatus } : i), updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): ${newStatus} discuss ${id}`);
+        S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === id);
+        toast('操作成功'); renderPage();
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-async function submitReply() {
-  const text = document.getElementById('reply-text').value.trim();
-  if (!text) return toast('請輸入回覆內容', 'warning');
-  if (!S.token) return toast('請先認證', 'error');
-  const btn = document.getElementById('reply-btn'); btn.disabled = true; btn.textContent = '發送中...';
-  try {
-    const s = S.discuss.slug, d = S.discuss.data;
-    const existing = await API.getMD('discuss', s);
-    const ts = new Date().toISOString();
-    const newContent = existing + '\n---reply---\nauthor: joe\ntimestamp: ' + ts + '\n\n' + text + '\n';
-    await API.putFile(`content/discuss/${s}.md`, newContent, `chore: reply to ${s}`);
-    const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === d.id ? { ...i, reply_count: i.reply_count + 1, last_reply_at: ts, last_reply_by: 'joe', updated_at: ts } : i), updated_at: new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): update discuss ${s}`);
-    S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === d.id);
-    const md = await API.getMD('discuss', s);
-    const parsed = parseFM(md);
-    S.discuss.thread = parseThread(parsed.body || md);
-    const replyText = document.getElementById('reply-text');
-    if (replyText) replyText.value = '';
-    toast('回覆已新增！'); renderPage();
-  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發送回覆'; }
-}
+    async function submitReply() {
+      const text = document.getElementById('reply-text').value.trim();
+      if (!text) return toast('請輸入回覆內容', 'warning');
+      if (!S.token) return toast('請先認證', 'error');
+      const identity = await askIdentity();
+      if (!identity) return;
+      const btn = document.getElementById('reply-btn'); btn.disabled = true; btn.textContent = '發送中...';
+      try {
+        const s = S.discuss.slug, d = S.discuss.data;
+        const existing = await API.getMD('discuss', s);
+        const ts = new Date().toISOString();
+        const newContent = existing + '\n---reply---\nauthor: ' + identity + '\ntimestamp: ' + ts + '\n\n' + text + '\n';
+        await API.putFile(`content/discuss/${s}.md`, newContent, `chore: reply to ${s}`);
+        const um = { ...S.manifest, discuss: S.manifest.discuss.map(i => i.id === d.id ? { ...i, reply_count: i.reply_count + 1, last_reply_at: ts, last_reply_by: identity, updated_at: ts } : i), updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): update discuss ${s}`);
+        S.manifest = um; S.discuss.data = um.discuss.find(i => i.id === d.id);
+        const md = await API.getMD('discuss', s);
+        const parsed = parseFM(md);
+        S.discuss.thread = parseThread(parsed.body || md);
+        const replyText = document.getElementById('reply-text');
+        if (replyText) replyText.value = '';
+        toast('回覆已新增！'); renderPage();
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發送回覆'; }
+    }
 
-function showDiscussModal() {
-  document.getElementById('modal-container').innerHTML = `
+    async function showDiscussModal() {
+      const identity = await askIdentity();
+      if (!identity) return;
+      S.currentIdentity = identity;
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">發起新討論</div>
@@ -986,32 +1815,32 @@ function showDiscussModal() {
         </div>
       </div>
     </div>`;
-  document.getElementById('md-title').focus();
-}
+      document.getElementById('md-title').focus();
+    }
 
-async function submitDiscuss() {
-  const title = document.getElementById('md-title').value.trim();
-  const content = document.getElementById('md-content').value.trim();
-  if (!title || !content) return toast('請填寫標題和內容', 'warning');
-  if (!S.token) return toast('請先設定 Token', 'error');
-  const btn = document.getElementById('md-submit'); btn.disabled = true; btn.textContent = '建立中...';
-  try {
-    const s = slug(title); const id = genId('discuss', S.manifest.discuss);
-    const now = new Date().toISOString();
-    const openedDate = now.split('T')[0];
-    const md = `---\nid: ${id}\n---\n\n## 主文\n\n${content}\n`;
-    await API.createFile(`content/discuss/${s}.md`, md, `feat: add discuss ${s}`);
-    const item = { id, title, status:'open', opened_at:openedDate, opened_by:'joe', reply_count:0, last_reply_at:null, last_reply_by:null, slug:s, created_at:now, updated_at:now };
-    const um = { ...S.manifest, discuss:[...S.manifest.discuss, item], updated_at:new Date().toISOString() };
-    await API.putFile('manifest.json', JSON.stringify(um,null,2), `chore(manifest): add discuss ${s}`);
-    S.manifest = um; closeModal(); toast('討論串已建立！'); renderPage();
-  } catch(e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發起討論'; }
-}
+    async function submitDiscuss() {
+      const title = document.getElementById('md-title').value.trim();
+      const content = document.getElementById('md-content').value.trim();
+      if (!title || !content) return toast('請填寫標題和內容', 'warning');
+      if (!S.token) return toast('請先設定 Token', 'error');
+      const btn = document.getElementById('md-submit'); btn.disabled = true; btn.textContent = '建立中...';
+      try {
+        const s = slug(title); const id = genId('discuss', S.manifest.discuss);
+        const now = new Date().toISOString();
+        const openedDate = now.split('T')[0];
+        const md = `---\nid: ${id}\n---\n\n## 主文\n\n${content}\n`;
+        await API.createFile(`content/discuss/${s}.md`, md, `feat: add discuss ${s}`);
+        const item = { id, title, status: 'open', opened_at: openedDate, opened_by: S.currentIdentity || 'joe', reply_count: 0, last_reply_at: null, last_reply_by: null, slug: s, created_at: now, updated_at: now };
+        const um = { ...S.manifest, discuss: [...S.manifest.discuss, item], updated_at: new Date().toISOString() };
+        await API.putFile('manifest.json', JSON.stringify(um, null, 2), `chore(manifest): add discuss ${s}`);
+        S.manifest = um; closeModal(); toast('討論串已建立！'); renderPage();
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '發起討論'; }
+    }
 
-function showDiscussEditModal(id) {
-  const item = S.manifest.discuss.find(i => i.id === id);
-  if (!item) return toast('找不到討論', 'error');
-  document.getElementById('modal-container').innerHTML = `
+    function showDiscussEditModal(id) {
+      const item = S.manifest.discuss.find(i => i.id === id);
+      if (!item) return toast('找不到討論', 'error');
+      document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">編輯討論主題</div>
@@ -1022,19 +1851,19 @@ function showDiscussEditModal(id) {
         </div>
       </div>
     </div>`;
-  document.getElementById('md-edit-title').focus();
-  toast('編輯功能正在開發中', 'warning');
-}
+      document.getElementById('md-edit-title').focus();
+      toast('編輯功能正在開發中', 'warning');
+    }
 
-/* ===== Trash ===== */
-function renderTrash(m) {
-  const items = S.manifest?.deleted || [];
-  if (items.length === 0) {
-    m.innerHTML = '<div class="empty" style="margin-top:60px"><div class="empty-icon">🗑️</div><div class="empty-text">垃圾桶是空的</div></div>';
-    return;
-  }
-  
-  m.innerHTML = `
+    /* ===== Trash ===== */
+    function renderTrash(m) {
+      const items = S.manifest?.deleted || [];
+      if (items.length === 0) {
+        m.innerHTML = '<div class="empty" style="margin-top:60px"><div class="empty-icon">🗑️</div><div class="empty-text">垃圾桶是空的</div></div>';
+        return;
+      }
+
+      m.innerHTML = `
     <div class="page-header"><h1 class="page-title">垃圾桶</h1>
       <button class="btn btn-danger btn-sm" onclick="clearAllTrash()" data-agent-action="empty-trash" aria-label="清空垃圾桶">🗑️ 清空垃圾桶</button></div>
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -1051,51 +1880,51 @@ function renderTrash(m) {
           </div>
         </div>`).join('')}
     </div>`;
-}
+    }
 
-function clearAllTrash() {
-  if (!confirm('確定要清空垃圾桶？此操作無法撤銷。')) return;
-  if (!S.token) return toast('請先認證', 'error');
-  if (!S.manifest) return;
-  S.manifest.deleted = [];
-  S.manifest.updated_at = new Date().toISOString();
-  saveManifest('chore(manifest): clear trash');
-}
+    function clearAllTrash() {
+      if (!confirm('確定要清空垃圾桶？此操作無法撤銷。')) return;
+      if (!S.token) return toast('請先認證', 'error');
+      if (!S.manifest) return;
+      S.manifest.deleted = [];
+      S.manifest.updated_at = new Date().toISOString();
+      saveManifest('chore(manifest): clear trash');
+    }
 
-function restoreItem(id, type) {
-  if (!S.manifest) return;
-  const item = S.manifest.deleted.find(i => i.id === id);
-  if (!item) return toast('找不到項目', 'error');
-  
-  const restored = { ...item };
-  delete restored.original_type;
-  delete restored.deleted_at;
-  
-  if (type === 'learn') {
-    S.manifest.learn = (S.manifest.learn || []).concat([restored]);
-  } else if (type === 'insights') {
-    S.manifest.insights = (S.manifest.insights || []).concat([restored]);
-  } else if (type === 'discuss') {
-    S.manifest.discuss = (S.manifest.discuss || []).concat([restored]);
-  }
-  
-  S.manifest.deleted = S.manifest.deleted.filter(i => i.id !== id);
-  S.manifest.updated_at = new Date().toISOString();
-  saveManifest(`chore(manifest): restore ${type}/${id}`);
-}
+    function restoreItem(id, type) {
+      if (!S.manifest) return;
+      const item = S.manifest.deleted.find(i => i.id === id);
+      if (!item) return toast('找不到項目', 'error');
 
-function deleteItemPermanently(id) {
-  if (!confirm('確定要永久刪除嗎？此操作無法撤銷。')) return;
-  if (!S.token) return toast('請先認證', 'error');
-  if (!S.manifest) return;
-  S.manifest.deleted = S.manifest.deleted.filter(i => i.id !== id);
-  S.manifest.updated_at = new Date().toISOString();
-  saveManifest(`chore(manifest): permanently delete ${id}`);
-}
+      const restored = { ...item };
+      delete restored.original_type;
+      delete restored.deleted_at;
 
-/* ===== Settings ===== */
-function renderSettings(m) {
-  m.innerHTML = `
+      if (type === 'learn') {
+        S.manifest.learn = (S.manifest.learn || []).concat([restored]);
+      } else if (type === 'insights') {
+        S.manifest.insights = (S.manifest.insights || []).concat([restored]);
+      } else if (type === 'discuss') {
+        S.manifest.discuss = (S.manifest.discuss || []).concat([restored]);
+      }
+
+      S.manifest.deleted = S.manifest.deleted.filter(i => i.id !== id);
+      S.manifest.updated_at = new Date().toISOString();
+      saveManifest(`chore(manifest): restore ${type}/${id}`);
+    }
+
+    function deleteItemPermanently(id) {
+      if (!confirm('確定要永久刪除嗎？此操作無法撤銷。')) return;
+      if (!S.token) return toast('請先認證', 'error');
+      if (!S.manifest) return;
+      S.manifest.deleted = S.manifest.deleted.filter(i => i.id !== id);
+      S.manifest.updated_at = new Date().toISOString();
+      saveManifest(`chore(manifest): permanently delete ${id}`);
+    }
+
+    /* ===== Settings ===== */
+    function renderSettings(m) {
+      m.innerHTML = `
     <div class="page-header"><h1 class="page-title">設定</h1></div>
     <div class="settings-card" role="form" aria-label="系統設定">
       <h2>GitHub 認證</h2>
@@ -1120,106 +1949,107 @@ function renderSettings(m) {
       <ul><li>📚 待學習：記錄待研究主題</li><li>💡 心得：分享研究成果</li><li>💬 討論：知識交流</li></ul>
       ${S.manifest ? `<p style="margin-top:12px;color:var(--text3);font-size:0.8rem">Manifest 最後更新：${S.manifest.updated_at}</p>` : ''}
     </div>`;
-}
+    }
 
-function saveSettings() {
-  const token = document.getElementById('s-token').value.trim();
-  const owner = document.getElementById('s-owner').value.trim();
-  const repo = document.getElementById('s-repo').value.trim();
-  S.token = token || null; S.repo = { owner, repo };
-  if (token) localStorage.setItem('gh_pat', token); else localStorage.removeItem('gh_pat');
-  localStorage.setItem('repo_config', JSON.stringify(S.repo));
-  toast('設定已儲存'); renderHeader();
-  if (owner && repo) loadManifest().then(renderPage);
-}
+    function saveSettings() {
+      const token = document.getElementById('s-token').value.trim();
+      const owner = document.getElementById('s-owner').value.trim();
+      const repo = document.getElementById('s-repo').value.trim();
+      S.token = token || null; S.repo = { owner, repo };
+      if (token) localStorage.setItem('gh_pat', token); else localStorage.removeItem('gh_pat');
+      localStorage.setItem('repo_config', JSON.stringify(S.repo));
+      toast('設定已儲存'); renderHeader();
+      if (owner && repo) loadManifest().then(renderPage);
+    }
 
-async function verifyConn() {
-  const btn = document.getElementById('s-verify');
-  btn.disabled = true; btn.textContent = '驗證中...';
-  try {
-    const ok = await API.verify();
-    document.getElementById('s-result').innerHTML = ok
-      ? '<div class="verify-result" style="background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.3)">✓ GitHub 連線驗證成功！</div>'
-      : '<div class="verify-result" style="background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)">✕ 驗證失敗，請檢查 Token 和 Repo 設定</div>';
-  } catch(e) {
-    document.getElementById('s-result').innerHTML = `<div class="verify-result" style="background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)">✕ ${esc(e.message)}</div>`;
-  }
-  btn.disabled = false; btn.textContent = '🔗 驗證連線';
-}
+    async function verifyConn() {
+      const btn = document.getElementById('s-verify');
+      btn.disabled = true; btn.textContent = '驗證中...';
+      try {
+        const ok = await API.verify();
+        document.getElementById('s-result').innerHTML = ok
+          ? '<div class="verify-result" style="background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.3)">✓ GitHub 連線驗證成功！</div>'
+          : '<div class="verify-result" style="background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)">✕ 驗證失敗，請檢查 Token 和 Repo 設定</div>';
+      } catch (e) {
+        document.getElementById('s-result').innerHTML = `<div class="verify-result" style="background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)">✕ ${esc(e.message)}</div>`;
+      }
+      btn.disabled = false; btn.textContent = '🔗 驗證連線';
+    }
 
-/* ===== Tab Switching ===== */
-function switchTab(tabId) {
-  S.tab = tabId;
-  renderPage();
-  renderSidebar();
-}
+    /* ===== Tab Switching ===== */
+    function switchTab(tabId) {
+      S.tab = tabId;
+      renderPage();
+      renderSidebar();
+    }
 
-/* ===== Cyclers ===== */
-async function cycleStatus(type, id) {
-  if (!S.token) return toast('請先認證', 'error');
-  const collection = S.manifest[type];
-  if (!collection) return;
-  const item = collection.find(i => i.id === id);
-  if (!item) return;
+    /* ===== Cyclers ===== */
+    async function cycleStatus(type, id) {
+      if (!S.token) return toast('請先認證', 'error');
+      const collection = S.manifest[type];
+      if (!collection) return;
+      const item = collection.find(i => i.id === id);
+      if (!item) return;
 
-  let flow = [];
-  if (type === 'learn') flow = ['pending', 'in_progress', 'reviewed', 'archived'];
-  else if (type === 'insights') flow = ['draft', 'published', 'archived'];
-  else if (type === 'discuss') flow = ['open', 'pinned', 'closed'];
+      let flow = [];
+      if (type === 'learn') flow = ['pending', 'in_progress', 'reviewed', 'archived'];
+      else if (type === 'insights') flow = ['draft', 'published', 'archived'];
+      else if (type === 'discuss') flow = ['open', 'pinned', 'closed'];
 
-  const idx = flow.indexOf(item.status);
-  const nextStatus = flow[(idx + 1) % flow.length];
+      const idx = flow.indexOf(item.status);
+      const nextStatus = flow[(idx + 1) % flow.length];
 
-  item.status = nextStatus;
-  item.updated_at = new Date().toISOString();
-  S.manifest.updated_at = new Date().toISOString();
+      item.status = nextStatus;
+      item.updated_at = new Date().toISOString();
+      S.manifest.updated_at = new Date().toISOString();
 
-  // If we are looking at the detail view, update that too
-  if (S[type] && S[type].data && S[type].data.id === id) {
-    S[type].data.status = nextStatus;
-  }
+      // If we are looking at the detail view, update that too
+      if (S[type] && S[type].data && S[type].data.id === id) {
+        S[type].data.status = nextStatus;
+      }
 
-  renderPage();
-  try {
-    await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update status for ${id}`);
-    toast('狀態已更新');
-  } catch (e) { toast(e.message, 'error'); }
-}
+      renderPage();
+      try {
+        await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update status for ${id}`);
+        toast('狀態已更新');
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-async function cyclePriority(type, id) {
-  if (!S.token) return toast('請先認證', 'error');
-  const collection = S.manifest[type];
-  if (!collection) return;
-  const item = collection.find(i => i.id === id);
-  if (!item || !item.priority) return;
+    async function cyclePriority(type, id) {
+      if (!S.token) return toast('請先認證', 'error');
+      const collection = S.manifest[type];
+      if (!collection) return;
+      const item = collection.find(i => i.id === id);
+      if (!item || !item.priority) return;
 
-  const flow = ['low', 'medium', 'high'];
-  const idx = flow.indexOf(item.priority);
-  const nextPriority = flow[(idx + 1) % flow.length];
+      const flow = ['low', 'medium', 'high'];
+      const idx = flow.indexOf(item.priority);
+      const nextPriority = flow[(idx + 1) % flow.length];
 
-  item.priority = nextPriority;
-  item.updated_at = new Date().toISOString();
-  S.manifest.updated_at = new Date().toISOString();
+      item.priority = nextPriority;
+      item.updated_at = new Date().toISOString();
+      S.manifest.updated_at = new Date().toISOString();
 
-  // If we are looking at the detail view, update that too
-  if (S[type] && S[type].data && S[type].data.id === id) {
-    S[type].data.priority = nextPriority;
-  }
+      // If we are looking at the detail view, update that too
+      if (S[type] && S[type].data && S[type].data.id === id) {
+        S[type].data.priority = nextPriority;
+      }
 
-  renderPage();
-  try {
-    await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update priority for ${id}`);
-    toast('優先級已更新');
-  } catch (e) { toast(e.message, 'error'); }
-}
+      renderPage();
+      try {
+        await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update priority for ${id}`);
+        toast('優先級已更新');
+      } catch (e) { toast(e.message, 'error'); }
+    }
 
-/* ===== Init ===== */
-document.addEventListener('DOMContentLoaded', () => {
-  renderApp();
-  if (S.repo.owner && S.repo.repo) loadManifest().then(renderPage);
-});
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    /* ===== Init ===== */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderApp();
+      if (S.repo.owner && S.repo.repo) loadManifest().then(renderPage);
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-    </script>
+  </script>
 </body>
+
 </html>
