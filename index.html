@@ -616,20 +616,24 @@
       animation: slideUp 0.25s ease;
     }
 
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
     .modal-title {
       font-size: 1.25rem;
       font-weight: 700;
-      margin-bottom: 20px;
       color: var(--text)
     }
 
     .modal-actions {
       display: flex;
-      justify-content: flex-end;
       gap: 10px;
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border)
     }
 
     /* Toast */
@@ -1166,12 +1170,16 @@
       base() { return `https://api.github.com/repos/${S.repo.owner}/${S.repo.repo}`; },
 
       async getManifest() {
-        const r = await fetch(`${this.raw()}/manifest.json`);
+        const h = this.headers();
+        h['Accept'] = 'application/vnd.github.v3.raw';
+        const r = await fetch(`${this.base()}/contents/manifest.json`, { headers: h });
         if (!r.ok) throw new Error(`載入 manifest 失敗 (${r.status})`);
         return r.json();
       },
       async getMD(section, s) {
-        const r = await fetch(`${this.raw()}/content/${section}/${s}.md`);
+        const h = this.headers();
+        h['Accept'] = 'application/vnd.github.v3.raw';
+        const r = await fetch(`${this.base()}/contents/content/${section}/${s}.md`, { headers: h });
         if (!r.ok) throw new Error(`載入文章失敗 (${r.status})`);
         return r.text();
       },
@@ -1366,15 +1374,17 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">新增學習主題</div>
+        <div class="modal-header">
+          <div class="modal-title">新增學習主題</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="ml-submit" onclick="submitLearn()">新增</button>
+          </div>
+        </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="ml-title" placeholder="輸入主題標題"></div>
         <div class="form-group"><label>描述</label><textarea class="form-textarea" id="ml-desc" placeholder="輸入主題描述"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="ml-tags" placeholder="llm, qwen3"></div>
         <div class="form-group"><label>優先級</label><select class="form-select" id="ml-pri"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="ml-submit" onclick="submitLearn()">新增</button>
-        </div>
       </div>
     </div>`;
       document.getElementById('ml-title').focus();
@@ -1535,15 +1545,17 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">編輯學習主題</div>
+        <div class="modal-header">
+          <div class="modal-title">編輯學習主題</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="ml-edit-submit" onclick="submitLearnEdit('${esc(id)}')">保存</button>
+          </div>
+        </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="ml-edit-title" value="${esc(item.title)}" placeholder="輸入主題標題"></div>
         <div class="form-group"><label>描述</label><textarea class="form-textarea" id="ml-edit-desc" placeholder="輸入主題描述">${esc(item.description)}</textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="ml-edit-tags" value="${esc(item.tags.join(', '))}" placeholder="llm, qwen3"></div>
         <div class="form-group"><label>優先級</label><select class="form-select" id="ml-edit-pri"><option value="low" ${item.priority === 'low' ? 'selected' : ''}>低</option><option value="medium" ${item.priority === 'medium' ? 'selected' : ''}>中</option><option value="high" ${item.priority === 'high' ? 'selected' : ''}>高</option></select></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="ml-edit-submit" onclick="submitLearnEdit('${esc(id)}')">保存</button>
-        </div>
       </div>
     </div>`;
       document.getElementById('ml-edit-title').focus();
@@ -1575,16 +1587,18 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">新增心得分享（快速）</div>
+        <div class="modal-header">
+          <div class="modal-title">新增心得分享（快速）</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="mi-quick-submit" onclick="submitInsightQuick('${esc(learnId)}')">新增</button>
+          </div>
+        </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="mi-quick-title" placeholder="輸入心得標題"></div>
         <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-quick-summary" placeholder="輸入心得摘要"></textarea></div>
         <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-quick-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-quick-tags" placeholder="llm, finetuning"></div>
         <div class="form-group"><label>關聯主題</label><input class="form-input" value="${esc(learnTitle)}" disabled></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="mi-quick-submit" onclick="submitInsightQuick('${esc(learnId)}')">新增</button>
-        </div>
       </div>
     </div>`;
       document.getElementById('mi-quick-title').focus();
@@ -1617,15 +1631,17 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">編輯心得分享</div>
+        <div class="modal-header">
+          <div class="modal-title">編輯心得分享</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="mi-edit-submit" onclick="submitInsightEdit('${esc(id)}')" style="display:none">保存</button>
+          </div>
+        </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="mi-edit-title" value="${esc(item.title)}" placeholder="輸入心得標題"></div>
         <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-edit-summary" placeholder="輸入心得摘要">${esc(item.summary)}</textarea></div>
         <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-edit-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-edit-tags" value="${esc(item.tags.join(', '))}" placeholder="llm, finetuning"></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="mi-edit-submit" onclick="submitInsightEdit('${esc(id)}')" style="display:none">保存</button>
-        </div>
       </div>
     </div>`;
       document.getElementById('mi-edit-title').focus();
@@ -1639,16 +1655,18 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">新增心得分享</div>
+        <div class="modal-header">
+          <div class="modal-title">新增心得分享</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="mi-submit" onclick="submitInsight()">新增</button>
+          </div>
+        </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="mi-title" placeholder="輸入心得標題"></div>
         <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-summary" placeholder="輸入心得摘要"></textarea></div>
         <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-tags" placeholder="llm, finetuning"></div>
         <div class="form-group"><label>關聯主題（可選）</label><select class="form-select" id="mi-learn"><option value="">-- 不關聯 --</option>${(S.manifest?.learn || []).map(i => `<option value="${esc(i.id)}">${esc(i.title)}</option>`).join('')}</select></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="mi-submit" onclick="submitInsight()">新增</button>
-        </div>
       </div>
     </div>`;
       document.getElementById('mi-title').focus();
@@ -1806,13 +1824,15 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">發起新討論</div>
+        <div class="modal-header">
+          <div class="modal-title">發起新討論</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="md-submit" onclick="submitDiscuss()">發起討論</button>
+          </div>
+        </div>
         <div class="form-group"><label>討論標題</label><input class="form-input" id="md-title" placeholder="輸入討論標題"></div>
         <div class="form-group"><label>主文內容</label><textarea class="form-textarea" id="md-content" placeholder="輸入討論主文" style="min-height:150px"></textarea></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="md-submit" onclick="submitDiscuss()">發起討論</button>
-        </div>
       </div>
     </div>`;
       document.getElementById('md-title').focus();
@@ -1843,12 +1863,14 @@
       document.getElementById('modal-container').innerHTML = `
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-title">編輯討論主題</div>
-        <div class="form-group"><label>標題</label><input class="form-input" id="md-edit-title" value="${esc(item.title)}" placeholder="輸入討論標題"></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="closeModal()">取消</button>
-          <button class="btn btn-primary" id="md-edit-submit" onclick="submitDiscussEdit('${esc(id)}')" style="display:none">保存</button>
+        <div class="modal-header">
+          <div class="modal-title">編輯討論主題</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="md-edit-submit" onclick="submitDiscussEdit('${esc(id)}')" style="display:none">保存</button>
+          </div>
         </div>
+        <div class="form-group"><label>標題</label><input class="form-input" id="md-edit-title" value="${esc(item.title)}" placeholder="輸入討論標題"></div>
       </div>
     </div>`;
       document.getElementById('md-edit-title').focus();
