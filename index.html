@@ -289,7 +289,7 @@ const S = {
   tab: 'learn', manifest: null, token: localStorage.getItem('gh_pat'),
   repo: JSON.parse(localStorage.getItem('repo_config') || '{"owner":"","repo":""}'),
   learn: { filter: 'all', slug: null, data: null },
-  insights: { slug: null, data: null },
+  insights: { filter: 'all', slug: null, data: null },
   discuss: { slug: null, data: null, thread: null },
 };
 
@@ -479,7 +479,7 @@ function renderLearn(m) {
     ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">目前沒有主題</div></div>' :
     `<div class="card-grid">${filtered.map(i => `
       <div class="card card-click" onclick="openLearn('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="learn-card-${esc(i.id)}" aria-label="開啟主題：${esc(i.title)}">
-        <div class="card-title"><span class="priority-dot priority-${i.priority} clickable-badge" aria-hidden="true" onclick="event.stopPropagation(); cyclePriority('learn', '${esc(i.id)}')"></span> ${esc(i.title)}</div>
+        <div class="card-title"><span class="clickable-badge" style="font-size:0.75rem; font-weight:600; padding:2px 6px; border-radius:var(--r-sm); background:var(--surface2); color:var(--text2); vertical-align:middle; margin-right:6px" onclick="event.stopPropagation(); cyclePriority('learn', '${esc(i.id)}')"><span class="priority-dot priority-${i.priority}" aria-hidden="true"></span> ${i.priority}</span>${esc(i.title)}</div>
         <div class="card-desc">${esc(i.description)}</div>
         <div class="card-meta">
           <span class="badge badge-${i.status} clickable-badge" onclick="event.stopPropagation(); cycleStatus('learn', '${esc(i.id)}')">${i.status}</span>
@@ -516,7 +516,7 @@ function renderLearnDetail(m) {
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
         <span>狀態：<strong><span class="badge badge-${d.status} clickable-badge" onclick="cycleStatus('learn', '${esc(d.id)}')">${d.status}</span></strong></span>
-        <span>優先級：<strong><span class="priority-dot priority-${d.priority} clickable-badge" aria-hidden="true" onclick="cyclePriority('learn', '${esc(d.id)}')"></span> ${d.priority}</strong></span>
+        <span>優先級：<strong><span class="clickable-badge" onclick="cyclePriority('learn', '${esc(d.id)}')"><span class="priority-dot priority-${d.priority}" aria-hidden="true"></span> ${d.priority}</span></strong></span>
         <span>新增者：<strong>${esc(d.added_by)}</strong></span>
         ${d.assigned_to ? `<span>負責人：<strong class="author-badge author-${d.assigned_to}">${d.assigned_to}</strong></span>` : ''}
       </div>
@@ -590,13 +590,19 @@ function closeModal() {
 /* ===== Insights ===== */
 function renderInsights(m) {
   if (S.insights.slug && S.insights.data) return renderInsightsDetail(m);
-  const items = (S.manifest ? S.manifest.insights : []).filter(i => i.status !== 'archived')
-    .sort((a,b) => new Date(b.published_at) - new Date(a.published_at));
+  const items = S.manifest ? S.manifest.insights : [];
+  const filterVal = S.insights.filter || 'all';
+  let filtered = filterVal === 'all' ? items : items.filter(i => i.status === filterVal);
+  filtered = filtered.sort((a,b) => new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at));
+  
+  const filters = [['all','全部'],['draft','草稿'],['published','已發布'],['archived','已封存']];
+  
   m.innerHTML = `
     <div class="page-header"><h1 class="page-title">心得分享</h1>
       <button class="btn btn-primary" onclick="showInsightModal()" data-agent-action="new-insight" aria-label="新增心得">＋ 新增心得</button></div>
-    ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">還沒有心得</div></div>' :
-    `<div class="card-grid">${items.map(i => `
+    <div class="filters" role="group" aria-label="心得篩選器">${filters.map(([k,v]) => `<button class="filter-btn ${filterVal===k?'active':''}" onclick="S.insights.filter='${k}';renderPage()" data-agent-action="filter-insights-${k}" aria-pressed="${filterVal===k}" aria-label="篩選 ${v}">${v}</button>`).join('')}</div>
+    ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">還沒有心得</div></div>' :
+    `<div class="card-grid">${filtered.map(i => `
       <div class="card card-click" onclick="openInsight('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="insight-card-${esc(i.id)}" aria-label="開啟心得：${esc(i.title)}">
         <div class="card-title">${esc(i.title)}</div>
         <div class="card-desc">${esc(i.summary)}</div>
