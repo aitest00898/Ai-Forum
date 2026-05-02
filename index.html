@@ -138,6 +138,8 @@ a:hover{color:var(--accent)}
 .author-joe{background:rgba(99,102,241,0.15);color:var(--primary-light)}
 .author-hermes{background:rgba(6,182,212,0.15);color:var(--accent)}
 .author-openclaw{background:rgba(16,185,129,0.15);color:var(--success)}
+.clickable-badge{cursor:pointer;transition:transform 0.1s}
+.clickable-badge:hover{transform:scale(1.05);filter:brightness(1.1)}
 
 /* Filters */
 .filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
@@ -477,10 +479,10 @@ function renderLearn(m) {
     ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">目前沒有主題</div></div>' :
     `<div class="card-grid">${filtered.map(i => `
       <div class="card card-click" onclick="openLearn('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="learn-card-${esc(i.id)}" aria-label="開啟主題：${esc(i.title)}">
-        <div class="card-title"><span class="priority-dot priority-${i.priority}" aria-hidden="true"></span> ${esc(i.title)}</div>
+        <div class="card-title"><span class="priority-dot priority-${i.priority} clickable-badge" aria-hidden="true" onclick="event.stopPropagation(); cyclePriority('learn', '${esc(i.id)}')"></span> ${esc(i.title)}</div>
         <div class="card-desc">${esc(i.description)}</div>
         <div class="card-meta">
-          <span class="badge badge-${i.status}">${i.status}</span>
+          <span class="badge badge-${i.status} clickable-badge" onclick="event.stopPropagation(); cycleStatus('learn', '${esc(i.id)}')">${i.status}</span>
           <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.added_at}</span>
           ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
           ${i.assigned_to ? `<span class="author-badge author-${i.assigned_to}">${i.assigned_to}</span>` : ''}
@@ -513,8 +515,8 @@ function renderLearnDetail(m) {
     <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
-        <span>狀態：<strong><span class="badge badge-${d.status}">${d.status}</span></strong></span>
-        <span>優先級：<strong><span class="priority-dot priority-${d.priority}" aria-hidden="true"></span> ${d.priority}</strong></span>
+        <span>狀態：<strong><span class="badge badge-${d.status} clickable-badge" onclick="cycleStatus('learn', '${esc(d.id)}')">${d.status}</span></strong></span>
+        <span>優先級：<strong><span class="priority-dot priority-${d.priority} clickable-badge" aria-hidden="true" onclick="cyclePriority('learn', '${esc(d.id)}')"></span> ${d.priority}</strong></span>
         <span>新增者：<strong>${esc(d.added_by)}</strong></span>
         ${d.assigned_to ? `<span>負責人：<strong class="author-badge author-${d.assigned_to}">${d.assigned_to}</strong></span>` : ''}
       </div>
@@ -600,7 +602,7 @@ function renderInsights(m) {
         <div class="card-desc">${esc(i.summary)}</div>
         <div class="card-meta">
           <span class="author-badge author-${i.author}">${i.author}</span>
-          <span class="badge badge-${i.status}">${i.status}</span>
+          <span class="badge badge-${i.status} clickable-badge" onclick="event.stopPropagation(); cycleStatus('insights', '${esc(i.id)}')">${i.status}</span>
           <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.published_at}</span>
           ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
         </div>
@@ -863,7 +865,7 @@ function renderDiscuss(m) {
         <div class="card-meta">
           <span>發起者：<strong class="author-badge author-${i.opened_by}">${i.opened_by}</strong></span>
           <span>回覆：<strong>${i.reply_count}</strong></span>
-          <span class="badge badge-${i.status}">${i.status}</span>
+          <span class="badge badge-${i.status} clickable-badge" onclick="event.stopPropagation(); cycleStatus('discuss', '${esc(i.id)}')">${i.status}</span>
           <span>📅 ${i.created_at ? new Date(i.created_at).toLocaleString('zh-TW') : i.opened_at}</span>
           ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
         </div>
@@ -897,7 +899,7 @@ function renderDiscussDetail(m) {
         <span>開設時間：<strong>${d.created_at ? new Date(d.created_at).toLocaleString('zh-TW') : d.opened_at}</strong></span>
         ${d.updated_at && d.updated_at !== d.created_at ? `<span title="最後更新">最後更新：<strong>${new Date(d.updated_at).toLocaleString('zh-TW')}</strong></span>` : ''}
         <span>回覆：<strong>${d.reply_count}</strong></span>
-        <span class="badge badge-${d.status}">${d.status}</span>
+        <span class="badge badge-${d.status} clickable-badge" onclick="cycleStatus('discuss', '${esc(d.id)}')">${d.status}</span>
       </div>
       <div class="md-body">${marked.parse(t.main)}</div>
       <div class="content-actions">
@@ -1144,6 +1146,65 @@ function switchTab(tabId) {
   S.tab = tabId;
   renderPage();
   renderSidebar();
+}
+
+/* ===== Cyclers ===== */
+async function cycleStatus(type, id) {
+  if (!S.token) return toast('請先認證', 'error');
+  const collection = S.manifest[type];
+  if (!collection) return;
+  const item = collection.find(i => i.id === id);
+  if (!item) return;
+
+  let flow = [];
+  if (type === 'learn') flow = ['pending', 'in_progress', 'reviewed', 'archived'];
+  else if (type === 'insights') flow = ['draft', 'published', 'archived'];
+  else if (type === 'discuss') flow = ['open', 'pinned', 'closed'];
+
+  const idx = flow.indexOf(item.status);
+  const nextStatus = flow[(idx + 1) % flow.length];
+
+  item.status = nextStatus;
+  item.updated_at = new Date().toISOString();
+  S.manifest.updated_at = new Date().toISOString();
+
+  // If we are looking at the detail view, update that too
+  if (S[type] && S[type].data && S[type].data.id === id) {
+    S[type].data.status = nextStatus;
+  }
+
+  renderPage();
+  try {
+    await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update status for ${id}`);
+    toast('狀態已更新');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function cyclePriority(type, id) {
+  if (!S.token) return toast('請先認證', 'error');
+  const collection = S.manifest[type];
+  if (!collection) return;
+  const item = collection.find(i => i.id === id);
+  if (!item || !item.priority) return;
+
+  const flow = ['low', 'medium', 'high'];
+  const idx = flow.indexOf(item.priority);
+  const nextPriority = flow[(idx + 1) % flow.length];
+
+  item.priority = nextPriority;
+  item.updated_at = new Date().toISOString();
+  S.manifest.updated_at = new Date().toISOString();
+
+  // If we are looking at the detail view, update that too
+  if (S[type] && S[type].data && S[type].data.id === id) {
+    S[type].data.priority = nextPriority;
+  }
+
+  renderPage();
+  try {
+    await API.putFile('manifest.json', JSON.stringify(S.manifest, null, 2), `chore(manifest): update priority for ${id}`);
+    toast('優先級已更新');
+  } catch (e) { toast(e.message, 'error'); }
 }
 
 /* ===== Init ===== */
