@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-ai-agent-friendly="true">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Joe's Knowledge Forum - An AI-agent friendly knowledge management system">
     <title>Joe's Knowledge Forum</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -420,8 +421,8 @@ function renderHeader() {
       ${up ? `<span class="header-updated">更新於 ${up}</span>` : ''}
     </div>
     <div class="header-right">
-      <button class="btn btn-ghost btn-sm" onclick="loadManifest().then(renderPage)">↻ 刷新</button>
-      <span class="auth-dot ${S.token ? 'on' : 'off'}" title="${S.token ? '已認證' : '未認證'}"></span>
+      <button class="btn btn-ghost btn-sm" onclick="loadManifest().then(renderPage)" data-agent-action="refresh-manifest" aria-label="刷新清單">↻ 刷新</button>
+      <span class="auth-dot ${S.token ? 'on' : 'off'}" title="${S.token ? '已認證' : '未認證'}" aria-label="認證狀態：${S.token ? '已認證' : '未認證'}"></span>
     </div>`;
 }
 
@@ -432,19 +433,19 @@ function renderSidebar() {
     { id:'discuss', icon:'💬', label:'討論' },
   ];
   document.getElementById('app-sidebar').innerHTML = `
-    <div class="nav-group">
-      ${items.map(i => `<button class="nav-btn ${S.tab===i.id?'active':''}" onclick="switchTab('${i.id}')">
-        <span class="nav-icon">${i.icon}</span><span>${i.label}</span></button>`).join('')}
+    <div class="nav-group" role="navigation" aria-label="主選單">
+      ${items.map(i => `<button class="nav-btn ${S.tab===i.id?'active':''}" onclick="switchTab('${i.id}')" data-agent-action="nav-${i.id}" aria-label="切換至 ${i.label}">
+        <span class="nav-icon" aria-hidden="true">${i.icon}</span><span>${i.label}</span></button>`).join('')}
     </div>
     <div class="nav-sep"></div>
     <div class="nav-group">
-      <button class="nav-btn ${S.tab==='trash'?'active':''}" onclick="switchTab('trash')">
-        <span class="nav-icon">🗑️</span><span>垃圾桶</span></button>
+      <button class="nav-btn ${S.tab==='trash'?'active':''}" onclick="switchTab('trash')" data-agent-action="nav-trash" aria-label="切換至 垃圾桶">
+        <span class="nav-icon" aria-hidden="true">🗑️</span><span>垃圾桶</span></button>
     </div>
     <div class="nav-sep"></div>
     <div class="nav-group">
-      <button class="nav-btn ${S.tab==='settings'?'active':''}" onclick="switchTab('settings')">
-        <span class="nav-icon">⚙️</span><span>設定</span></button>
+      <button class="nav-btn ${S.tab==='settings'?'active':''}" onclick="switchTab('settings')" data-agent-action="nav-settings" aria-label="切換至 設定">
+        <span class="nav-icon" aria-hidden="true">⚙️</span><span>設定</span></button>
     </div>`;
 }
 
@@ -471,12 +472,12 @@ function renderLearn(m) {
   const filters = [['all','全部'],['pending','待完成'],['in_progress','進行中'],['reviewed','已完成'],['archived','已封存']];
   m.innerHTML = `
     <div class="page-header"><h1 class="page-title">待學習主題</h1>
-      <button class="btn btn-primary" onclick="showLearnModal()">＋ 新增主題</button></div>
-    <div class="filters">${filters.map(([k,v]) => `<button class="filter-btn ${S.learn.filter===k?'active':''}" onclick="S.learn.filter='${k}';renderPage()">${v}</button>`).join('')}</div>
+      <button class="btn btn-primary" onclick="showLearnModal()" data-agent-action="new-learn-topic" aria-label="新增主題">＋ 新增主題</button></div>
+    <div class="filters" role="group" aria-label="主題篩選器">${filters.map(([k,v]) => `<button class="filter-btn ${S.learn.filter===k?'active':''}" onclick="S.learn.filter='${k}';renderPage()" data-agent-action="filter-learn-${k}" aria-pressed="${S.learn.filter===k}" aria-label="篩選 ${v}">${v}</button>`).join('')}</div>
     ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">目前沒有主題</div></div>' :
     `<div class="card-grid">${filtered.map(i => `
-      <div class="card card-click" onclick="openLearn('${esc(i.slug)}')">
-        <div class="card-title"><span class="priority-dot priority-${i.priority}"></span> ${esc(i.title)}</div>
+      <div class="card card-click" onclick="openLearn('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="learn-card-${esc(i.id)}" aria-label="開啟主題：${esc(i.title)}">
+        <div class="card-title"><span class="priority-dot priority-${i.priority}" aria-hidden="true"></span> ${esc(i.title)}</div>
         <div class="card-desc">${esc(i.description)}</div>
         <div class="card-meta">
           <span class="badge badge-${i.status}">${i.status}</span>
@@ -486,9 +487,9 @@ function renderLearn(m) {
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
-          <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(i.id)}','${esc(i.title)}')" title="新增心得">📝 心得</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(i.id)}')" title="刪除">🗑️ 刪除</button>
+          <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(i.id)}')" title="編輯" data-agent-action="edit-learn-${esc(i.id)}" aria-label="編輯主題">✏️ 編輯</button>
+          <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(i.id)}','${esc(i.title)}')" title="新增心得" data-agent-action="quick-insight-learn-${esc(i.id)}" aria-label="新增心得">📝 心得</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(i.id)}')" title="刪除" data-agent-action="delete-learn-${esc(i.id)}" aria-label="刪除主題">🗑️ 刪除</button>
         </div>
       </div>`).join('')}</div>`}`;
 }
@@ -508,22 +509,22 @@ function renderLearnDetail(m) {
   const d = S.learn.data;
   const showActions = d.status === 'reviewed' && S.token;
   m.innerHTML = `
-    <button class="back-btn" onclick="S.learn.slug=null;S.learn.data=null;renderPage()">← 返回列表</button>
-    <div class="content-viewer">
+    <button class="back-btn" onclick="S.learn.slug=null;S.learn.data=null;renderPage()" data-agent-action="back-to-learn-list" aria-label="返回列表">← 返回列表</button>
+    <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
         <span>狀態：<strong><span class="badge badge-${d.status}">${d.status}</span></strong></span>
-        <span>優先級：<strong><span class="priority-dot priority-${d.priority}"></span> ${d.priority}</strong></span>
+        <span>優先級：<strong><span class="priority-dot priority-${d.priority}" aria-hidden="true"></span> ${d.priority}</strong></span>
         <span>新增者：<strong>${esc(d.added_by)}</strong></span>
         ${d.assigned_to ? `<span>負責人：<strong class="author-badge author-${d.assigned_to}">${d.assigned_to}</strong></span>` : ''}
       </div>
       <div class="md-body">${marked.parse(d.body)}</div>
       <div class="content-actions">
-        <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(d.id)}')">✏️ 編輯</button>
-        <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(d.id)}','${esc(d.title)}')">📝 新增心得</button>
-        ${showActions ? `<button class="btn btn-warning btn-sm" onclick="learnReset('${esc(d.id)}')">🔄 重新研究</button>
-        <button class="btn btn-ghost btn-sm" onclick="learnArchive('${esc(d.id)}')">📦 封存</button>` : ''}
-        <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(d.id)}')">🗑️ 刪除</button>
+        <button class="btn btn-ghost btn-sm" onclick="showLearnEditModal('${esc(d.id)}')" data-agent-action="edit-learn-detail" aria-label="編輯主題">✏️ 編輯</button>
+        <button class="btn btn-primary btn-sm" onclick="showInsightQuickModal('${esc(d.id)}','${esc(d.title)}')" data-agent-action="quick-insight-learn-detail" aria-label="新增心得">📝 新增心得</button>
+        ${showActions ? `<button class="btn btn-warning btn-sm" onclick="learnReset('${esc(d.id)}')" data-agent-action="reset-learn-${esc(d.id)}" aria-label="重新研究">🔄 重新研究</button>
+        <button class="btn btn-ghost btn-sm" onclick="learnArchive('${esc(d.id)}')" data-agent-action="archive-learn-${esc(d.id)}" aria-label="封存主題">📦 封存</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('learn','${esc(d.id)}')" data-agent-action="delete-learn-detail" aria-label="刪除主題">🗑️ 刪除</button>
       </div>
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
@@ -591,10 +592,10 @@ function renderInsights(m) {
     .sort((a,b) => new Date(b.published_at) - new Date(a.published_at));
   m.innerHTML = `
     <div class="page-header"><h1 class="page-title">心得分享</h1>
-      <button class="btn btn-primary" onclick="showInsightModal()">＋ 新增心得</button></div>
+      <button class="btn btn-primary" onclick="showInsightModal()" data-agent-action="new-insight" aria-label="新增心得">＋ 新增心得</button></div>
     ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">還沒有心得</div></div>' :
     `<div class="card-grid">${items.map(i => `
-      <div class="card card-click" onclick="openInsight('${esc(i.slug)}')">
+      <div class="card card-click" onclick="openInsight('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="insight-card-${esc(i.id)}" aria-label="開啟心得：${esc(i.title)}">
         <div class="card-title">${esc(i.title)}</div>
         <div class="card-desc">${esc(i.summary)}</div>
         <div class="card-meta">
@@ -605,8 +606,8 @@ function renderInsights(m) {
         </div>
         <div style="margin-top:8px">${i.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(i.id)}')" title="刪除">🗑️ 刪除</button>
+          <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(i.id)}')" title="編輯" data-agent-action="edit-insight-${esc(i.id)}" aria-label="編輯心得">✏️ 編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(i.id)}')" title="刪除" data-agent-action="delete-insight-${esc(i.id)}" aria-label="刪除心得">🗑️ 刪除</button>
         </div>
       </div>`).join('')}</div>`}`;
 }
@@ -626,19 +627,19 @@ function renderInsightsDetail(m) {
   const d = S.insights.data;
   const src = S.manifest.learn.find(i => i.id === d.learn_ref);
   m.innerHTML = `
-    <button class="back-btn" onclick="S.insights.slug=null;S.insights.data=null;renderPage()">← 返回列表</button>
-    <div class="content-viewer">
+    <button class="back-btn" onclick="S.insights.slug=null;S.insights.data=null;renderPage()" data-agent-action="back-to-insight-list" aria-label="返回列表">← 返回列表</button>
+    <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
         <span>作者：<strong class="author-badge author-${d.author}">${d.author}</strong></span>
         <span>發布：<strong>${d.created_at ? new Date(d.created_at).toLocaleString('zh-TW') : d.published_at}</strong></span>
         ${d.updated_at && d.updated_at !== d.created_at ? `<span title="最後編輯">編輯於：<strong>${new Date(d.updated_at).toLocaleString('zh-TW')}</strong></span>` : ''}
-        ${src ? `<span>來源主題：<a href="#" onclick="event.preventDefault();S.insights.slug=null;S.insights.data=null;S.tab='learn';openLearn('${esc(src.slug)}')">${esc(src.title)}</a></span>` : ''}
+        ${src ? `<span>來源主題：<a href="#" onclick="event.preventDefault();S.insights.slug=null;S.insights.data=null;S.tab='learn';openLearn('${esc(src.slug)}')" data-agent-action="nav-to-source-learn">${esc(src.title)}</a></span>` : ''}
       </div>
       <div class="md-body">${marked.parse(d.body)}</div>
       <div class="content-actions">
-        <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(d.id)}')">✏️ 編輯</button>
-        ${d.status !== 'archived' && S.token ? `<button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(d.id)}')">🗑️ 刪除</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="showInsightEditModal('${esc(d.id)}')" data-agent-action="edit-insight-detail" aria-label="編輯心得">✏️ 編輯</button>
+        ${d.status !== 'archived' && S.token ? `<button class="btn btn-danger btn-sm" onclick="deleteItem('insights','${esc(d.id)}')" data-agent-action="delete-insight-detail" aria-label="刪除心得">🗑️ 刪除</button>` : ''}
       </div>
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
@@ -854,10 +855,10 @@ function renderDiscuss(m) {
   });
   m.innerHTML = `
     <div class="page-header"><h1 class="page-title">討論區</h1>
-      <button class="btn btn-primary" onclick="showDiscussModal()">＋ 發起新討論</button></div>
+      <button class="btn btn-primary" onclick="showDiscussModal()" data-agent-action="new-discuss" aria-label="發起新討論">＋ 發起新討論</button></div>
     ${items.length === 0 ? '<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">還沒有討論</div></div>' :
     `<div style="display:flex;flex-direction:column;gap:12px">${items.map(i => `
-      <div class="card card-click" onclick="openDiscuss('${esc(i.slug)}')">
+      <div class="card card-click" onclick="openDiscuss('${esc(i.slug)}')" role="button" tabindex="0" data-agent-target="discuss-card-${esc(i.id)}" aria-label="進入討論：${esc(i.title)}">
         <div class="card-title">${i.status === 'pinned' ? '📌 ' : ''}${esc(i.title)}</div>
         <div class="card-meta">
           <span>發起者：<strong class="author-badge author-${i.opened_by}">${i.opened_by}</strong></span>
@@ -867,8 +868,8 @@ function renderDiscuss(m) {
           ${i.updated_at && i.updated_at !== i.created_at ? `<span title="最後編輯">✏️ ${new Date(i.updated_at).toLocaleString('zh-TW')}</span>` : ''}
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;pointer-events:auto" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(i.id)}')" title="編輯">✏️ 編輯</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(i.id)}')" title="刪除">🗑️ 刪除</button>
+          <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(i.id)}')" title="編輯" data-agent-action="edit-discuss-${esc(i.id)}" aria-label="編輯討論">✏️ 編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(i.id)}')" title="刪除" data-agent-action="delete-discuss-${esc(i.id)}" aria-label="刪除討論">🗑️ 刪除</button>
         </div>
       </div>`).join('')}</div>`}`;
 }
@@ -888,8 +889,8 @@ async function openDiscuss(s) {
 function renderDiscussDetail(m) {
   const d = S.discuss.data, t = S.discuss.thread;
   m.innerHTML = `
-    <button class="back-btn" onclick="S.discuss.slug=null;S.discuss.data=null;S.discuss.thread=null;renderPage()">← 返回列表</button>
-    <div class="content-viewer">
+    <button class="back-btn" onclick="S.discuss.slug=null;S.discuss.data=null;S.discuss.thread=null;renderPage()" data-agent-action="back-to-discuss-list" aria-label="返回列表">← 返回列表</button>
+    <div class="content-viewer" role="article">
       <h1 class="content-title">${esc(d.title)}</h1>
       <div class="content-meta">
         <span>發起者：<strong class="author-badge author-${d.opened_by}">${d.opened_by}</strong></span>
@@ -900,14 +901,14 @@ function renderDiscussDetail(m) {
       </div>
       <div class="md-body">${marked.parse(t.main)}</div>
       <div class="content-actions">
-        <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(d.id)}')">✏️ 編輯</button>
+        <button class="btn btn-ghost btn-sm" onclick="showDiscussEditModal('${esc(d.id)}')" data-agent-action="edit-discuss-detail" aria-label="編輯討論">✏️ 編輯</button>
         ${S.token ? `
-          ${d.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','closed')">🔒 關閉</button>
-            <button class="btn btn-warning btn-sm" onclick="discussAction('${esc(d.id)}','pinned')">📌 釘選</button>` : ''}
-          ${d.status === 'closed' ? `<button class="btn btn-success btn-sm" onclick="discussAction('${esc(d.id)}','open')">🔓 重新開啟</button>` : ''}
-          ${d.status === 'pinned' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','open')">📌 取消釘選</button>` : ''}
+          ${d.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','closed')" data-agent-action="close-discuss" aria-label="關閉討論">🔒 關閉</button>
+            <button class="btn btn-warning btn-sm" onclick="discussAction('${esc(d.id)}','pinned')" data-agent-action="pin-discuss" aria-label="釘選討論">📌 釘選</button>` : ''}
+          ${d.status === 'closed' ? `<button class="btn btn-success btn-sm" onclick="discussAction('${esc(d.id)}','open')" data-agent-action="reopen-discuss" aria-label="重新開啟討論">🔓 重新開啟</button>` : ''}
+          ${d.status === 'pinned' ? `<button class="btn btn-ghost btn-sm" onclick="discussAction('${esc(d.id)}','open')" data-agent-action="unpin-discuss" aria-label="取消釘選">📌 取消釘選</button>` : ''}
         ` : ''}
-        <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(d.id)}')">🗑️ 刪除</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('discuss','${esc(d.id)}')" data-agent-action="delete-discuss-detail" aria-label="刪除討論">🗑️ 刪除</button>
       </div>
       
       ${t.replies.length > 0 ? `<h3 style="margin-top:28px;font-size:1.1rem;color:var(--text);margin-bottom:16px">回覆（${t.replies.length}）</h3>
@@ -919,9 +920,9 @@ function renderDiscussDetail(m) {
       
       ${d.status !== 'closed' ? `<div class="reply-form" id="reply-form-section">
         <h3 style="font-size:0.95rem;color:var(--text);margin-bottom:10px">新增回覆</h3>
-        <textarea class="form-textarea" id="reply-text" placeholder="輸入你的回覆..." style="min-height:100px"></textarea>
-        <div style="margin-top:10px"><button class="btn btn-primary btn-sm" id="reply-btn" onclick="submitReply()">發送回覆</button></div>
-      </div>` : '<div style="padding:16px;background:rgba(239,68,68,0.1);border-radius:var(--r-sm);color:var(--text3);text-align:center">此討論已關閉，無法新增回覆</div>'}
+        <textarea class="form-textarea" id="reply-text" placeholder="輸入你的回覆..." style="min-height:100px" aria-label="回覆內容"></textarea>
+        <div style="margin-top:10px"><button class="btn btn-primary btn-sm" id="reply-btn" onclick="submitReply()" data-agent-action="submit-reply">發送回覆</button></div>
+      </div>` : '<div style="padding:16px;background:rgba(239,68,68,0.1);border-radius:var(--r-sm);color:var(--text3);text-align:center" role="alert">此討論已關閉，無法新增回覆</div>'}
     </div>`;
   document.querySelectorAll('.md-body pre code').forEach(el => hljs.highlightElement(el));
 }
@@ -1027,18 +1028,18 @@ function renderTrash(m) {
   
   m.innerHTML = `
     <div class="page-header"><h1 class="page-title">垃圾桶</h1>
-      <button class="btn btn-danger btn-sm" onclick="clearAllTrash()">🗑️ 清空垃圾桶</button></div>
+      <button class="btn btn-danger btn-sm" onclick="clearAllTrash()" data-agent-action="empty-trash" aria-label="清空垃圾桶">🗑️ 清空垃圾桶</button></div>
     <div style="display:flex;flex-direction:column;gap:12px">
       ${items.map(i => `
-        <div class="card" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)">
+        <div class="card" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)" data-agent-target="trash-item-${esc(i.id)}">
           <div class="card-title">${esc(i.title)}</div>
           <div class="card-meta">
             <span>類型：<strong>${i.original_type === 'learn' ? '待學習' : i.original_type === 'insights' ? '心得' : '討論'}</strong></span>
             <span>刪除於：<strong>${new Date(i.deleted_at).toLocaleString('zh-TW')}</strong></span>
           </div>
           <div style="margin-top:12px;display:flex;gap:8px">
-            <button class="btn btn-success btn-sm" onclick="restoreItem('${esc(i.id)}','${esc(i.original_type)}')" title="恢復">↩️ 恢復</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteItemPermanently('${esc(i.id)}')" title="永久刪除">✕ 永久刪除</button>
+            <button class="btn btn-success btn-sm" onclick="restoreItem('${esc(i.id)}','${esc(i.original_type)}')" title="恢復" data-agent-action="restore-trash-${esc(i.id)}" aria-label="恢復項目">↩️ 恢復</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItemPermanently('${esc(i.id)}')" title="永久刪除" data-agent-action="permanent-delete-${esc(i.id)}" aria-label="永久刪除項目">✕ 永久刪除</button>
           </div>
         </div>`).join('')}
     </div>`;
@@ -1088,21 +1089,21 @@ function deleteItemPermanently(id) {
 function renderSettings(m) {
   m.innerHTML = `
     <div class="page-header"><h1 class="page-title">設定</h1></div>
-    <div class="settings-card">
+    <div class="settings-card" role="form" aria-label="系統設定">
       <h2>GitHub 認證</h2>
-      <div class="form-group"><label>GitHub Personal Access Token</label>
-        <input class="form-input" type="password" id="s-token" value="${S.token || ''}" placeholder="ghp_xxxxxxxxxxxx">
-        <div class="settings-hint">💡 Token 僅存在您的瀏覽器 localStorage，不傳送至任何第三方</div>
+      <div class="form-group"><label for="s-token">GitHub Personal Access Token</label>
+        <input class="form-input" type="password" id="s-token" value="${S.token || ''}" placeholder="ghp_xxxxxxxxxxxx" aria-describedby="token-hint">
+        <div class="settings-hint" id="token-hint">💡 Token 僅存在您的瀏覽器 localStorage，不傳送至任何第三方</div>
       </div>
-      <div class="form-group"><label>Repository Owner</label>
+      <div class="form-group"><label for="s-owner">Repository Owner</label>
         <input class="form-input" id="s-owner" value="${esc(S.repo.owner)}" placeholder="your-username"></div>
-      <div class="form-group"><label>Repository Name</label>
+      <div class="form-group"><label for="s-repo">Repository Name</label>
         <input class="form-input" id="s-repo" value="${esc(S.repo.repo)}" placeholder="my-forum"></div>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 儲存設定</button>
-        <button class="btn btn-ghost btn-sm" id="s-verify" onclick="verifyConn()">🔗 驗證連線</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()" data-agent-action="save-settings" aria-label="儲存設定">💾 儲存設定</button>
+        <button class="btn btn-ghost btn-sm" id="s-verify" onclick="verifyConn()" data-agent-action="verify-connection" aria-label="驗證連線">🔗 驗證連線</button>
       </div>
-      <div id="s-result"></div>
+      <div id="s-result" aria-live="polite"></div>
     </div>
     <div class="settings-card settings-about">
       <h2>關於</h2>
