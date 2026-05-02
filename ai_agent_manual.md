@@ -1,4 +1,3 @@
-# Ai-Forum
 # Joe's Knowledge Forum - AI Agent 操作手冊
 
 此論壇在開發時已為 AI Agent 加入了專用的 `data-agent-action` 及 `data-agent-target` 屬性。AI Agent 在操作網頁時，**應優先使用這些專用屬性或是對應的 ID 進行選取 (Selector)**，避免依賴可能變動的 CSS Class 或文字內容。
