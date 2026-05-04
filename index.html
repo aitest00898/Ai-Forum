@@ -1283,6 +1283,10 @@
     function renderPage() {
       const m = document.getElementById('main-content');
       if (!m) return;
+      if (!S.manifest) {
+        m.innerHTML = '<div class="empty"><div class="empty-icon" style="animation: spin 2s linear infinite">↻</div><div class="empty-text">載入中...</div></div>';
+        return;
+      }
       if (S.tab === 'learn') renderLearn(m);
       else if (S.tab === 'insights') renderInsights(m);
       else if (S.tab === 'discuss') renderDiscuss(m);
@@ -1326,6 +1330,7 @@
     }
 
     async function openLearn(s) {
+      if (!S.manifest) return;
       const item = S.manifest.learn.find(i => i.slug === s);
       if (!item) return;
       try {
@@ -1466,7 +1471,7 @@
 
     function renderInsightsDetail(m) {
       const d = S.insights.data;
-      const src = S.manifest.learn.find(i => i.id === d.learn_ref);
+      const src = S.manifest ? S.manifest.learn.find(i => i.id === d.learn_ref) : null;
       m.innerHTML = `
     <button class="back-btn" onclick="S.insights.slug=null;S.insights.data=null;renderPage()" data-agent-action="back-to-insight-list" aria-label="返回列表">← 返回列表</button>
     <div class="content-viewer" role="article">
@@ -1729,6 +1734,7 @@
     }
 
     async function openDiscuss(s) {
+      if (!S.manifest) return;
       const item = S.manifest.discuss.find(i => i.slug === s);
       if (!item) return;
       try {
