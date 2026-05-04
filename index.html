@@ -541,7 +541,7 @@
 
     /* Forms */
     .form-group {
-      margin-bottom: 16px
+      margin-bottom: 12px
     }
 
     .form-group label {
@@ -567,7 +567,7 @@
     }
 
     .form-textarea {
-      min-height: 120px;
+      min-height: 100px;
       resize: vertical
     }
 
@@ -612,10 +612,10 @@
       background: var(--bg2);
       border: 1px solid var(--border2);
       border-radius: var(--r-lg);
-      padding: 28px;
+      padding: 24px 28px;
       width: 90%;
       max-width: 560px;
-      max-height: 85vh;
+      max-height: calc(100vh - 20px);
       overflow-y: auto;
       box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
       animation: slideUp 0.25s ease;
@@ -1088,6 +1088,13 @@
   <div id="modal-container"></div>
   <div id="toast-container"></div>
   <script>
+    /* ===== Error Guard ===== */
+    window.onerror = function(msg, url, line, col, error) {
+      const m = document.getElementById('main-content');
+      if (m) m.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">執行階段錯誤：${msg}<br><small>Line: ${line}</small></div></div>`;
+      return false;
+    };
+
     /* ===== Firebase Config & Init ===== */
     const firebaseConfig = {
       apiKey: "AIzaSyDIQ9hPrIsW8EPPScmLl5y95b02lOreUfY",
@@ -1099,14 +1106,21 @@
       measurementId: "G-8RCP0YM8MY"
     };
 
-    // Initialize Firebase (Compat)
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const analytics = firebase.analytics();
+    /* ===== Firebase Init ===== */
+    let db, analytics;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      analytics = firebase.analytics();
+      console.log("Firebase initialized successfully");
+    } catch (e) {
+      console.error("Firebase Initialization Error:", e);
+      S.error = "Firebase 初始化失敗，請檢查網路連線或腳本載入情況。內容：" + e.message;
+    }
 
     /* ===== State ===== */
     const S = {
-      tab: 'learn', manifest: null,
+      tab: 'learn', manifest: null, error: null,
       learn: { filter: 'all', slug: null, data: null },
       insights: { filter: 'all', slug: null, data: null },
       discuss: { slug: null, data: null, thread: null },
@@ -1183,11 +1197,27 @@
     const API = {
       async getManifest() {
         const docRef = db.collection('config').doc('manifest');
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-          throw new Error("Firebase Manifest 尚未初始化。請先建立資料。");
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("資料庫連線逾時，請檢查網路或 Firebase Rules。")), 10000)
+        );
+        try {
+          const docSnap = await Promise.race([docRef.get(), timeoutPromise]);
+          if (!docSnap.exists) {
+            const initial = {
+              updated_at: new Date().toISOString(),
+              learn: [],
+              insights: [],
+              discuss: [],
+              deleted: []
+            };
+            await docRef.set(initial);
+            return initial;
+          }
+          return docSnap.data();
+        } catch (e) {
+          console.error("Firestore Error:", e);
+          throw new Error("無法連接至 Firestore，請檢查 Firebase 設定與權限。");
         }
-        return docSnap.data();
       },
       async getMD(section, s) {
         const docRef = db.collection(section).doc(s);
@@ -1224,11 +1254,21 @@
 
     /* ===== Load Manifest ===== */
     async function loadManifest() {
+      if (S.error) return renderPage(); // If already failed during init
       try {
+        S.error = null;
+        console.log("Fetching manifest...");
         S.manifest = await API.getManifest();
+        console.log("Manifest loaded:", S.manifest);
         if (!S.manifest.deleted) S.manifest.deleted = [];
         renderHeader();
-      } catch (e) { toast(e.message, 'error'); }
+        renderPage();
+      } catch (e) { 
+        console.error("Load Manifest Error:", e);
+        S.error = e.message;
+        toast(e.message, 'error'); 
+        renderPage();
+      }
     }
 
     /* ===== Render Shell ===== */
@@ -1283,6 +1323,11 @@
     function renderPage() {
       const m = document.getElementById('main-content');
       if (!m) return;
+      if (S.error) {
+        m.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">載入失敗：${esc(S.error)}</div>
+          <button class="btn btn-primary btn-sm" style="margin-top:20px" onclick="loadManifest()">重試</button></div>`;
+        return;
+      }
       if (!S.manifest) {
         m.innerHTML = '<div class="empty"><div class="empty-icon" style="animation: spin 2s linear infinite">↻</div><div class="empty-text">載入中...</div></div>';
         return;
@@ -1606,7 +1651,7 @@
         </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="mi-quick-title" placeholder="輸入心得標題"></div>
         <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-quick-summary" placeholder="輸入心得摘要"></textarea></div>
-        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-quick-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-quick-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:120px"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-quick-tags" placeholder="llm, finetuning"></div>
         <div class="form-group"><label>關聯主題</label><input class="form-input" value="${esc(learnTitle)}" disabled></div>
       </div>
@@ -1650,7 +1695,7 @@
         </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="mi-edit-title" value="${esc(item.title)}" placeholder="輸入心得標題"></div>
         <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-edit-summary" placeholder="輸入心得摘要">${esc(item.summary)}</textarea></div>
-        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-edit-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-edit-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:120px"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-edit-tags" value="${esc(item.tags.join(', '))}" placeholder="llm, finetuning"></div>
       </div>
     </div>`;
@@ -1674,7 +1719,7 @@
         </div>
         <div class="form-group"><label>標題</label><input class="form-input" id="mi-title" placeholder="輸入心得標題"></div>
         <div class="form-group"><label>摘要</label><textarea class="form-textarea" id="mi-summary" placeholder="輸入心得摘要"></textarea></div>
-        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>內容</label><textarea class="form-textarea" id="mi-content" placeholder="輸入心得內容（支援 Markdown）" style="min-height:120px"></textarea></div>
         <div class="form-group"><label>標籤（逗號分隔）</label><input class="form-input" id="mi-tags" placeholder="llm, finetuning"></div>
         <div class="form-group"><label>關聯主題（可選）</label><select class="form-select" id="mi-learn"><option value="">-- 不關聯 --</option>${(S.manifest?.learn || []).map(i => `<option value="${esc(i.id)}">${esc(i.title)}</option>`).join('')}</select></div>
       </div>
@@ -1842,7 +1887,7 @@
           </div>
         </div>
         <div class="form-group"><label>討論標題</label><input class="form-input" id="md-title" placeholder="輸入討論標題"></div>
-        <div class="form-group"><label>主文內容</label><textarea class="form-textarea" id="md-content" placeholder="輸入討論主文" style="min-height:150px"></textarea></div>
+        <div class="form-group"><label>主文內容</label><textarea class="form-textarea" id="md-content" placeholder="輸入討論主文" style="min-height:120px"></textarea></div>
       </div>
     </div>`;
       document.getElementById('md-title').focus();
